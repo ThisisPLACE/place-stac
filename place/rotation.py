@@ -33,7 +33,7 @@ def construct_rotation_matrix_opk(omega, phi, kappa) -> np.matrix:
         [-math.sin(phi), 0, math.cos(phi)]
     ])
     rotation_z = np.matrix([
-        [math.cos(kappa), -math.sin(omega), 0],
+        [math.cos(kappa), -math.sin(kappa), 0],
         [math.sin(kappa), math.cos(kappa), 0],
         [0, 0, 1]
     ])
@@ -42,6 +42,11 @@ def construct_rotation_matrix_opk(omega, phi, kappa) -> np.matrix:
 
 def _rotate_point(point, rotation_matrix, latitude, longitude) -> np.ndarray:
     """Apply rotation matrix to a point"""
+
+    # TODO: We need to verify whether the lat offset should be reflected across the y-axis. See note:
+    '''Note that the x/y axes of this (3D) image coordinate system are not
+    aligned with the standard (2D) image coordinate system that is used to
+    describe (pixel) positions on an image: The y-axis is flipped.'''
     rotated = rotation_matrix.dot(point)
     reshaped = rotated.reshape((3,1))
     reshaped[0] = latitude + reshaped[0]
