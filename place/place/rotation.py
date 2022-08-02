@@ -38,7 +38,7 @@ def construct_rotation_matrix_opk(omega, phi, kappa) -> np.matrix:
         [0, 0, 1]
     ])
     # Construct the full, 3d rotation matrix 
-    return rotation_x * rotation_y * rotation_z
+    return np.matmul(np.matmul(rotation_x, rotation_y), rotation_z)
 
 def _rotate_point(point, rotation_matrix, latitude, longitude) -> np.ndarray:
     """Apply rotation matrix to a point"""
