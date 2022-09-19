@@ -1,0 +1,70 @@
+{
+    "type": "Feature",
+    "geometry": {
+        "coordinates": [
+            [
+                [
+                    387744.1326302847,
+                    590276.2425306244
+                ],
+                [
+                    387744.1326302847,
+                    590476.2857201244
+                ],
+                [
+                    387944.1758197847,
+                    590476.2857201244
+                ],
+                [
+                    387944.1758197847,
+                    590276.2425306244
+                ],
+                [
+                    387744.1326302847,
+                    590276.2425306244
+                ]
+            ]
+        ],
+        "type": "Polygon"
+    },
+    "properties": {
+        "title": "Data from Abidjan",
+        "description": "Data from the Abidjan, area : Cocody",
+        "start_datetime": "2021-07-07T12:38:58Z",
+        "end_datetime": "2021-07-07T12:38:58Z",
+        "created": "2021-07-07T12:38:58Z",
+        "updated": "2021-07-07T12:38:58Z",
+        "platform": "Drone V-MAP",
+        "mission": "Mission On Abidjan October 2020",
+        "gsd": 0.05,
+        "datetime": "2022-09-03T11:44:37Z"
+    },
+    "id": "local-image-col-2",
+    "bbox": [
+        387744.1326302847,
+        590276.2425306244,
+        387944.1758197847,
+        590476.2857201244
+    ],
+    "stac_version": "1.0.0",
+    "assets": [
+        {
+            "title": "Hyperlocal RGB",
+            "href": "F:\\code\\stac\\Cocody Nov 2021 ORTHO 47mm_A_02.tif",
+            "roles": [
+                "data"
+            ],
+            "media_type": "image/tiff; application=geotiff"
+        },
+        {
+            "title": "Thumbnail",
+            "href": "link2",
+            "roles": [
+                "thumbnail"
+            ],
+            "media_type": "image/png"
+        }
+    ],
+    "links": [],
+    "collection": "PLACE-Cote d'Ivoire-Abidjan-Cocody"
+}
