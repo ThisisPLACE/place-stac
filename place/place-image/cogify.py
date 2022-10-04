@@ -24,6 +24,8 @@ from rio_cogeo.profiles import cog_profiles
 from rotation import construct_rotation_matrix, rotate
 from S3Url import S3Url
 
+GOOD_EXIF = ("DateTime", "Model", "Software")
+
 def download_s3_to_temp(s3_path: str):
 
     s3 = boto3.client("s3")
@@ -38,7 +40,7 @@ def download_s3_to_temp(s3_path: str):
 def process_raw(raw_img_path: str):
     with open(raw_img_path, "rb") as raw_for_tags:
         raw_tags = exifread.process_file(raw_for_tags)
-        tags = {tag: raw_tags[tag] for tag in raw_tags if tag not in ("JPEGThumbnail", "TIFFThumbnail", "Filename", "EXIF MakerNote")}
+        tags = {tag: raw_tags[tag] for tag in raw_tags}
 
     with rawpy.imread(raw_img_path) as raw:
         rgb = raw.postprocess()
@@ -51,7 +53,6 @@ def process_jpg(jpg_img_path: str):
     tags = {
         ExifTags.TAGS[k]: v
         for k, v in img._getexif().items()
-        if k in ExifTags.TAGS and k not in ("EXIF MakerNote", "MakerNote", "PrintImageMatching")
     }
     rgb = np.array(img)
     return (rgb, tags)
@@ -122,8 +123,8 @@ def cogify(
 
     x_resolution = (altitude_cm * sensor_width_cm) / (focal_length_cm * img_width)
     y_resolution = (altitude_cm * sensor_height_cm) / (focal_length_cm * img_height)
-    print(f"x resolution in cm: {x_resolution}")
-    print(f"y resolution in cm: {y_resolution}")
+    # print(f"x resolution in cm: {x_resolution}")
+    # print(f"y resolution in cm: {y_resolution}")
 
     # Construct offsets from the lat/lng center corresponding to image boundaries
     # (division by 100 to move from cm to meters)
@@ -133,8 +134,8 @@ def cogify(
     # Here, we determine lat/lng offsets
     lat_offset = m_y_offset / ms_per_lat
     lng_offset = m_x_offset / ms_per_lng
-    print(f"lat offset {lat_offset}")
-    print(f"lng offset {lng_offset}")
+    # print(f"lat offset {lat_offset}")
+    # print(f"lng offset {lng_offset}")
 
     # Carry out OPK based rotation
     rotated = rotate(latitude, longitude, lat_offset, lng_offset, transformation_matrix)
@@ -153,7 +154,7 @@ def cogify(
             transform=transform, nodata=1
         ) as mem:
             # Populate the input file with numpy array
-            mem.update_tags(**tags)
+            mem.update_tags(**{tag: tags[tag] for tag in tags if tag in GOOD_EXIF})
             mem.write(reshaped)
 
             dst_profile = cog_profiles.get("webp")

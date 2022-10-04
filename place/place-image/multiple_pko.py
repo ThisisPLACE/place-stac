@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from multiprocessing import Pool
 import sys
 from typing import Any, Dict, List, Optional
 
@@ -9,6 +10,12 @@ from cogify import cogify
 from rotation import construct_rotation_matrix
 from version import __version__
 from util.tabular import parse_table
+
+def cogify_with_status(path, output_path, rotation_matrix):
+    print(f"Processing imagery from {path}")
+    cogify(path, output_path, rotation_matrix)
+    print(f"Successfully processed; results: {output_path}")
+
 
 def parse_args(args: List[str]) -> Optional[Dict[str, Any]]:
     desc = "PLACE cog conversion CLI"
@@ -49,7 +56,7 @@ if __name__ == "__main__":
 
     pko_lookup = parse_table(args["pko_table"], offset=1)
 
-    success_count = 0
+    params = []
     for id, pko_dict in pko_lookup.items():
         rotation_matrix = construct_rotation_matrix([
             float(pko_dict["r11"]),
@@ -64,10 +71,9 @@ if __name__ == "__main__":
         ])
         jpg_path = f"{args['jpg_dir']}/{id}.JPG"
         output_path = f"{args['output_dir']}/{id}.tif"
-        try:
-            cogify(jpg_path, output_path, rotation_matrix)
-        except botocore.exceptions.ClientError:
-            print(f"Failure: Unable to find imagery at {jpg_path}")
-        success_count += 1
-
-    print(f"Successfully converted {success_count}/{len(pko_lookup)} images in location table")
+        params.append((jpg_path, output_path, rotation_matrix))
+    try:
+        with Pool() as p:
+            p.starmap(cogify_with_status, params)
+    except botocore.exceptions.ClientError:
+        print(f"Failure: Unable to find imagery at {jpg_path}")

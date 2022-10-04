@@ -9,7 +9,8 @@ install_requires = [
     "stac-fastapi.types",
     "stac-fastapi.extensions",
     "orjson",
-    "pypgstac[psycopg]"
+    "pypgstac[psycopg]",
+    "pygeoif==0.7",
 ]
 
 extra_reqs = {
