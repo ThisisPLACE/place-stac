@@ -35,7 +35,7 @@ services:
     command:
       bash -c "./scripts/wait-for-it.sh database:5432 && python -m place.place-server.serve"
   database:
-    container_name: stac-db
+    container_name: place-stac-db
     image: ghcr.io/stac-utils/pgstac:v0.6.7
     environment:
       - POSTGRES_USER=username

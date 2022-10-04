@@ -57,23 +57,23 @@ def rotate(latitude, longitude, lat_offset, lng_offset, rotation_matrix, debug=F
     """Construct an omega-phi-kappa transformation matrix to rotate extent around image center"""
 
     # Construct lat/lng offsets from the image center
-    IMG_NE = np.array((lat_offset, lng_offset, 0))
-    IMG_SE = np.array((-lat_offset, lng_offset, 0))
-    IMG_SW = np.array((-lat_offset, -lng_offset, 0))
-    IMG_NW = np.array((lat_offset, -lng_offset, 0))
+    IMG_TR = np.array((lat_offset, lng_offset, 0))
+    IMG_BR = np.array((-lat_offset, lng_offset, 0))
+    IMG_TL = np.array((lat_offset, -lng_offset, 0))
+    IMG_BL = np.array((-lat_offset, -lng_offset, 0))
     # Rotate all extent points around center of image
-    NE_ROTATED = _rotate_point(IMG_NE, rotation_matrix, latitude, longitude)
-    SE_ROTATED = _rotate_point(IMG_SE, rotation_matrix, latitude, longitude)
-    SW_ROTATED = _rotate_point(IMG_SW, rotation_matrix, latitude, longitude)
-    NW_ROTATED = _rotate_point(IMG_NW, rotation_matrix, latitude, longitude)
+    TR_ROTATED = _rotate_point(IMG_TR, rotation_matrix, latitude, longitude)
+    BR_ROTATED = _rotate_point(IMG_BR, rotation_matrix, latitude, longitude)
+    TL_ROTATED = _rotate_point(IMG_TL, rotation_matrix, latitude, longitude)
+    BL_ROTATED = _rotate_point(IMG_BL, rotation_matrix, latitude, longitude)
 
     results = {
-        "NE": flatten(NE_ROTATED.tolist()[:2]),
-        "SE": flatten(SE_ROTATED.tolist()[:2]),
-        "SW": flatten(SW_ROTATED.tolist()[:2]),
-        "NW": flatten(NW_ROTATED.tolist()[:2]),
+        "TR": flatten(TR_ROTATED.tolist()),
+        "BR": flatten(BR_ROTATED.tolist()),
+        "TL": flatten(TL_ROTATED.tolist()),
+        "BL": flatten(BL_ROTATED.tolist()),
     }
     if debug:
-        results["INPUTS"] = [IMG_NE, IMG_SE, IMG_SW, IMG_NW],
-        results["OUTPUTS"] = [NE_ROTATED, SE_ROTATED, SW_ROTATED, NW_ROTATED]
+        results["INPUTS"] = [IMG_TR, IMG_BR, IMG_TL, IMG_BL],
+        results["OUTPUTS"] = [TR_ROTATED, BR_ROTATED, TL_ROTATED, BL_ROTATED]
     return results

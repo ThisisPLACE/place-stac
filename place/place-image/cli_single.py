@@ -30,31 +30,10 @@ def parse_args(args: List[str]) -> Optional[Dict[str, Any]]:
     )
 
     parser.add_argument(
-        "--latitude",
-        type=float,
-        help="Center of image latitude",
-        required=True
-    )
-
-    parser.add_argument(
-        "--longitude",
-        type=float,
-        help="Center of image longitude",
-        required=True
-    )
-
-    parser.add_argument(
-        "--altitude",
-        type=float,
-        help="Altitude of flight",
-        required=True
-    )
-
-    parser.add_argument(
         "--rotation-matrix",
         type=float,
         nargs='+',
-        help="Transformation matrix values",
+        help="Transformation matrix PKO values",
         required=True
     )
 
@@ -69,4 +48,4 @@ if __name__ == "__main__":
     assert len(args["rotation_matrix"]) == 9, f"The rotation matrix requires 9 values, {len(args['transformation_matrix'])} values provided"
 
     rotation_matrix = construct_rotation_matrix(args["rotation_matrix"])
-    cogify(args["raw_image"], args["output"], args["latitude"], args["longitude"], args["altitude"], rotation_matrix)
+    cogify(args["raw_image"], args["output"], rotation_matrix)

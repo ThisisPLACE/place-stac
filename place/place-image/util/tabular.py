@@ -28,12 +28,12 @@ def _construct_lookup_from_xlsx(xlsx_path, offset):
     return records
 
 
-def _construct_lookup_from_csv(csv_path, offset):
+def _construct_lookup_from_csv(csv_path, offset, delimiter=","):
     """Parse csv data format to lookup table"""
     records = {}
     header_row = 0 + offset
     with open(csv_path, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
         for idx, row in enumerate(reader):
             if idx < header_row:
                 pass
@@ -58,6 +58,8 @@ def parse_table(tabular_data_path, offset=0):
         records = _construct_lookup_from_xlsx(tabular_data_path, offset)
     elif (extension == "csv"):
         records = _construct_lookup_from_csv(tabular_data_path, offset)
+    elif (extension == "txt"):
+        records = _construct_lookup_from_csv(tabular_data_path, offset, "\t")
     else:
         raise ValueError(f"Currently supported extensions: xlsx and csv. Unable to process {extension}.")
     return records
