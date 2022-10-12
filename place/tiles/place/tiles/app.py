@@ -23,11 +23,9 @@ from titiler.core.middleware import (
 )
 from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 
+from place.tiles.endpoints import item, mosaic
 from place.tiles.settings import Settings
 
-logging.getLogger("botocore.credentials").disabled = True
-logging.getLogger("botocore.utils").disabled = True
-logging.getLogger("rio-tiler").setLevel(logging.ERROR)
 
 settings = Settings()
 
@@ -38,16 +36,17 @@ app = FastAPI(
     root_path=settings.root_path,
 )
 
-pgmosaic = MosaicTilerFactory()
-app.include_router(pgmosaic.router, prefix="/stac-mosaic", tags=["STAC Dynamic Mosaic"])
-
-app.include_router(cog.router, prefix="/cog", tags=["Cloud Optimized GeoTIFF"])
-
 app.include_router(
-    stac.router, prefix="/stac", tags=["SpatioTemporal Asset Catalog"]
+    item.pc_tile_factory.router,
+    prefix="/item",
+    tags=["Item tile endpoints"],
 )
 
-app.include_router(mosaic.router, prefix="/mosaicjson", tags=["MosaicJSON"])
+app.include_router(
+    mosaic.pgstac_mosaic_factory.router,
+    prefix="/mosaic",
+    tags=["PgSTAC Mosaic endpoints"],
+)
 
 app.include_router(tms.router, tags=["TileMatrixSets"])
 add_exception_handlers(app, DEFAULT_STATUS_CODES)

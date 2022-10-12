@@ -11,6 +11,7 @@ services:
     environment:
       - APP_HOST=0.0.0.0
       - APP_PORT=8082
+      - TILER_ROOT=http://localhost:8000
       - RELOAD=true
       - ENVIRONMENT=local
       - POSTGRES_USER=username
@@ -51,6 +52,9 @@ services:
       # Application
       - HOST=0.0.0.0
       - PORT=8000
+      # STAC server
+      - STAC_API_URL=stac:8082
+      - STAC_API_HREF=localhost:8082
       # Uvicorn
       # http://www.uvicorn.org/settings/#production
       - WEB_CONCURRENCY=1
@@ -62,7 +66,6 @@ services:
       - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
       - GDAL_HTTP_MULTIPLEX=YES
       - GDAL_HTTP_VERSION=2
-      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY
       - PYTHONWARNINGS=ignore
       - VSI_CACHE=TRUE
       - VSI_CACHE_SIZE=536870912

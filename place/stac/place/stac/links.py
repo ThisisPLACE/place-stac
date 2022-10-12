@@ -5,9 +5,8 @@ import pystac
 from fastapi import Request
 from stac_fastapi.types.stac import Collection, Item
 
-from pccommon.config.collections import DefaultRenderConfig
-from pcstac.config import get_settings
-
+from place.common.render import RenderConfig
+from place.stac.settings import Settings
 
 class LinkInjector:
     """
@@ -22,7 +21,7 @@ class LinkInjector:
     ----------
     collection_id : str
         The ID of a STAC Collection in the PC
-    render_config : DefaultRenderConfig
+    render_config : RenderConfig
         Details about the collection: e.g. asset names and convenient
         parameters for rendering those assets
     """
@@ -30,12 +29,13 @@ class LinkInjector:
     def __init__(
         self,
         collection_id: str,
-        render_config: DefaultRenderConfig,
+        render_config: RenderConfig,
         request: Request,
     ) -> None:
         self.collection_id = collection_id
         self.render_config = render_config
-        self.tiler_href = get_settings().get_tiler_href(request)
+        self.tiler_href = Settings().tiler_root
+        print(Settings())
 
     def inject_collection(self, collection: Collection) -> None:
         """Inject rendering links to a collection"""
@@ -48,7 +48,9 @@ class LinkInjector:
     def inject_item(self, item: Item) -> None:
         """Inject rendering links to an item"""
         item_id = item.get("id", "")
-        item.get("links", []).append(self._get_item_map_link(item_id))
+        item["links"] = item.get("links", [])
+        item["links"].append(self._get_item_map_link(item_id))
+        item["links"].append(self._get_item_wmts_link(item_id))
 
         assets = item.get("assets", {})
         assets["tilejson"] = self._get_item_tilejson_asset(item_id)
@@ -112,4 +114,18 @@ class LinkInjector:
             "href": href,
             "title": "Map of item",
             "type": "text/html",
+        }
+
+    def _get_item_wmts_link(self, item_id: str) -> Dict[str, Any]:
+        qs = self.render_config.get_full_render_qs_raw(self.collection_id, item_id)
+        href = urljoin(
+            self.tiler_href,
+            f"item/WebMercatorQuad/WMTSCapabilities.xml?{qs}",
+        )
+
+        return {
+            "rel": "WMTS",
+            "href": href,
+            "title": "WMTS capabilities for item",
+            "type": "text/xml",
         }

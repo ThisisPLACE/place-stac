@@ -8,29 +8,21 @@ from stac_fastapi.extensions.core import (
     FieldsExtension,
     SortExtension,
     TokenPaginationExtension,
-    TransactionExtension,
 )
-from stac_fastapi.extensions.third_party import BulkTransactionExtension
-from stac_fastapi.pgstac.config import Settings
-from stac_fastapi.pgstac.core import CoreCrudClient
 from stac_fastapi.pgstac.db import close_db_connection, connect_to_db
 from stac_fastapi.pgstac.extensions import QueryExtension
-from stac_fastapi.pgstac.transactions import BulkTransactionsClient, TransactionsClient
 from stac_fastapi.pgstac.types.search import PgstacSearch
+
+from place.stac.settings import Settings
+from place.stac.client import PlaceClient
 
 settings = Settings()
 extensions = [
-    TransactionExtension(
-        client=TransactionsClient(),
-        settings=settings,
-        response_class=ORJSONResponse,
-    ),
     QueryExtension(),
     SortExtension(),
     FieldsExtension(),
     TokenPaginationExtension(),
-    ContextExtension(),
-    BulkTransactionExtension(client=BulkTransactionsClient()),
+    ContextExtension()
 ]
 
 post_request_model = create_post_request_model(extensions, base_model=PgstacSearch)
@@ -38,7 +30,7 @@ post_request_model = create_post_request_model(extensions, base_model=PgstacSear
 api = StacApi(
     settings=settings,
     extensions=extensions,
-    client=CoreCrudClient(post_request_model=post_request_model),
+    client=PlaceClient.create(post_request_model=post_request_model),
     response_class=ORJSONResponse,
     search_get_request_model=create_get_request_model(extensions),
     search_post_request_model=post_request_model,
@@ -64,7 +56,7 @@ def run():
         import uvicorn
 
         uvicorn.run(
-            "stac_fastapi.pgstac.app:app",
+            "place.stac.app:app",
             host=settings.app_host,
             port=settings.app_port,
             log_level="info",

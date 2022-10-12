@@ -17,3 +17,4 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install -e ./place/stac
+RUN pip install -e ./place/common
