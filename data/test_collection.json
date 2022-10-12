@@ -1,6 +1,6 @@
 {
-    "id": "PLACE-Cote d'Ivoire-Abidjan-Cocody",
-    "description": "Drone images from Abidjan collected in the area of Cocody on October",
+    "id": "IvoryCoast-Abidjian-Adjame",
+    "description": "Drone images from Abidjan collected in the area of Adjame",
     "stac_version": "1.0.0",
     "links": [],
     "type": "Collection",
@@ -9,18 +9,18 @@
         "spatial": {
             "bbox": [
                 [
-                    0.0,
-                    0.0,
-                    387944.1758197847,
-                    590476.2857201244
+                    -4.2,
+                    5.2,
+                    -4.0,
+                    5.4
                 ]
             ]
         },
         "temporal": {
             "interval": [
                 [
-                    "2021-07-07T12:38:58Z",
-                    "2022-09-03T11:44:37Z"
+                    "2021-07-05T10:00:00Z",
+                    "2021-07-05T12:00:0Z"
                 ]
             ]
         }
@@ -30,7 +30,7 @@
         "africa",
         "cote d'ivoire",
         "abidjan",
-        "cocody",
+        "adjame",
         "capital city",
         "drone",
         "vmap"

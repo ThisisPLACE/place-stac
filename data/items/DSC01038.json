@@ -1,0 +1,202 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "id": "DSC01038",
+  "properties": {
+    "camera": "ILCE-6000",
+    "proj:epsg": 4326,
+    "proj:geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -4.031127755121638,
+            5.3627640156655625
+          ],
+          [
+            -4.028761133767251,
+            5.3627640156655625
+          ],
+          [
+            -4.028761133767251,
+            5.3654804287788815
+          ],
+          [
+            -4.031127755121638,
+            5.3654804287788815
+          ],
+          [
+            -4.031127755121638,
+            5.3627640156655625
+          ]
+        ]
+      ]
+    },
+    "proj:bbox": [
+      -4.031127755121638,
+      5.3627640156655625,
+      -4.028761133767251,
+      5.3654804287788815
+    ],
+    "proj:shape": [
+      4000,
+      6000
+    ],
+    "proj:transform": [
+      1.6833899430395993e-7,
+      3.3914684714079055e-7,
+      -4.031127755121638,
+      3.417458595878585e-7,
+      -1.6648448894797463e-7,
+      5.363429953621354,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "datetime": "2021-07-05T11:10:40Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -4.031127755121638,
+          5.3627640156655625
+        ],
+        [
+          -4.028761133767251,
+          5.3627640156655625
+        ],
+        [
+          -4.028761133767251,
+          5.3654804287788815
+        ],
+        [
+          -4.031127755121638,
+          5.3654804287788815
+        ],
+        [
+          -4.031127755121638,
+          5.3627640156655625
+        ]
+      ]
+    ]
+  },
+  "links": [],
+  "assets": {
+    "cog": {
+      "href": "https://placetrustafrica.s3.af-south-1.amazonaws.com/Ivory+Coast/Abidjan/Drone+Imagery/Images_Drones/Drone_V-MAP/Adjame/Flight+2S/cog/DSC01038_geotag.tif",
+      "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+      "raster:bands": [
+        {
+          "data_type": "uint8",
+          "scale": 1.0,
+          "offset": 0.0,
+          "sampling": "area",
+          "nodata": 1.0,
+          "statistics": {
+            "mean": 101.04643318768302,
+            "minimum": 0,
+            "maximum": 255,
+            "stddev": 38.65420573746363,
+            "valid_percent": 100.0
+          },
+          "histogram": {
+            "count": 11,
+            "min": 0.0,
+            "max": 255.0,
+            "buckets": [
+              3573,
+              51917,
+              165129,
+              141837,
+              160374,
+              106331,
+              56775,
+              7521,
+              3011,
+              2924
+            ]
+          }
+        },
+        {
+          "data_type": "uint8",
+          "scale": 1.0,
+          "offset": 0.0,
+          "sampling": "area",
+          "nodata": 1.0,
+          "statistics": {
+            "mean": 107.11841142020498,
+            "minimum": 7,
+            "maximum": 255,
+            "stddev": 32.98720765925288,
+            "valid_percent": 100.0
+          },
+          "histogram": {
+            "count": 11,
+            "min": 7.0,
+            "max": 255.0,
+            "buckets": [
+              2028,
+              33937,
+              124394,
+              186628,
+              196487,
+              107414,
+              37689,
+              5144,
+              2388,
+              3283
+            ]
+          }
+        },
+        {
+          "data_type": "uint8",
+          "scale": 1.0,
+          "offset": 0.0,
+          "sampling": "area",
+          "nodata": 1.0,
+          "statistics": {
+            "mean": 92.40703814329365,
+            "minimum": 0,
+            "maximum": 255,
+            "stddev": 39.90714805036942,
+            "valid_percent": 99.99957105600292
+          },
+          "histogram": {
+            "count": 11,
+            "min": 0.0,
+            "max": 255.0,
+            "buckets": [
+              5134,
+              96913,
+              202657,
+              99875,
+              149814,
+              102689,
+              31641,
+              4319,
+              2505,
+              3842
+            ]
+          }
+        }
+      ],
+      "roles": [
+        "data",
+        "layer"
+      ]
+    }
+  },
+  "bbox": [
+    -4.031127755121638,
+    5.3627640156655625,
+    -4.028761133767251,
+    5.3654804287788815
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json"
+  ],
+  "collection": "IvoryCoast-Abidjian-Adjame"
+}
