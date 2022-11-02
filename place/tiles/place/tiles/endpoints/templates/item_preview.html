@@ -24,7 +24,8 @@
                     zoom: 16,
                 });
                 var baseLayer = L.tileLayer(
-                    'http://stamen-tiles-b.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png'
+                    'http://stamen-tiles-b.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png',
+                    {maxZoom: 25, maxNativeZoom: 17}
                 ).addTo(map);
 
                 var tiles = tileJson.tiles[0];
