@@ -1,6 +1,0 @@
-folium
-pypgstac==0.6.6
-psycopg
-psycopg-pool
-psycopg-binary
-uvicorn
