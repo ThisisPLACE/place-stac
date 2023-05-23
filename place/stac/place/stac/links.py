@@ -57,7 +57,7 @@ class LinkInjector:
         assets["rendered_preview"] = self._get_item_preview_asset(item_id)
 
     def _get_collection_tilejson_asset(self) -> Dict[str, Any]:
-        qs = self.render_config.get_full_render_qs(self.collection_id)
+        qs = self.render_config.get_full_render_qs()
         href = urljoin(self.tiler_href, f"collection/tilejson.json?{qs}")
 
         return {
@@ -81,8 +81,8 @@ class LinkInjector:
         }
 
     def _get_item_preview_asset(self, item_id: str) -> Dict[str, Any]:
-        qs = self.render_config.get_full_render_qs(self.collection_id, item_id)
-        href = urljoin(self.tiler_href, f"item/preview.png?{qs}")
+        qs = self.render_config.get_full_render_qs()
+        href = urljoin(self.tiler_href, f"collections/{self.collection_id}/items/{item_id}/preview.png?{qs}")
 
         return {
             "title": "Rendered preview",
@@ -93,8 +93,8 @@ class LinkInjector:
         }
 
     def _get_item_tilejson_asset(self, item_id: str) -> Dict[str, Any]:
-        qs = self.render_config.get_full_render_qs(self.collection_id, item_id)
-        href = urljoin(self.tiler_href, f"item/tilejson.json?{qs}")
+        qs = self.render_config.get_full_render_qs()
+        href = urljoin(self.tiler_href, f"collections/{self.collection_id}/items/{item_id}/tilejson.json?{qs}")
 
         return {
             "title": "TileJSON with default rendering",
@@ -106,7 +106,7 @@ class LinkInjector:
     def _get_item_map_link(self, item_id: str) -> Dict[str, Any]:
         href = urljoin(
             self.tiler_href,
-            f"item/map?collection={self.collection_id}&item={item_id}",
+            f"collections/{self.collection_id}/items/{item_id}/map"
         )
 
         return {
@@ -117,10 +117,10 @@ class LinkInjector:
         }
 
     def _get_item_wmts_link(self, item_id: str) -> Dict[str, Any]:
-        qs = self.render_config.get_full_render_qs_raw(self.collection_id, item_id)
+        qs = self.render_config.get_full_render_qs_raw()
         href = urljoin(
             self.tiler_href,
-            f"item/WebMercatorQuad/WMTSCapabilities.xml?{qs}",
+            f"collections/{self.collection_id}/items/{item_id}/WebMercatorQuad/WMTSCapabilities.xml?{qs}",
         )
 
         return {

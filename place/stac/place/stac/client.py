@@ -47,7 +47,7 @@ class PlaceClient(CoreCrudClient):
         return item
 
 
-    async def get_collection(self, collection_id: str, **kwargs: Any) -> Collection:
+    async def get_collection(self, collection_id: str, request: Request, **kwargs: Any) -> Collection:
         """Get collection by id and inject PQE links.
         Called with `GET /collections/{collection_id}`.
         In the Planetary Computer, this method has been modified to inject
@@ -59,24 +59,22 @@ class PlaceClient(CoreCrudClient):
             Collection.
         """
         _super: CoreCrudClient = super()
-        _request = kwargs["request"]
 
         try:
-            result = await _super.get_collection(collection_id, **kwargs)
+            result = await _super.get_collection(collection_id, request, **kwargs)
         except NotFoundError:
             raise NotFoundError(f"No collection with id '{collection_id}' found!")
-        return self.inject_collection_links(result, _request)
+        return self.inject_collection_links(result, request)
 
-    async def get_item(self, item_id: str, collection_id: str, **kwargs: Any) -> Item:
+    async def get_item(self, item_id: str, collection_id: str, request: Request, **kwargs: Any) -> Item:
         _super: CoreCrudClient = super()
-        _request = kwargs["request"]
 
-        item = await _super.get_item(item_id, collection_id, **kwargs)
-        return self.inject_item_links(item, _request)
+        item = await _super.get_item(item_id, collection_id, request, **kwargs)
+        return self.inject_item_links(item, request)
 
 
     async def _search_base(
-        self, search_request: PgstacSearch, **kwargs: Any
+        self, search_request: PgstacSearch, request: Request, **kwargs: Any
     ) -> ItemCollection:
         """Cross catalog search (POST).
         Called with `POST /search`.
@@ -86,9 +84,8 @@ class PlaceClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         _super: CoreCrudClient = super()
-        request = kwargs["request"]
 
-        result = await _super._search_base(search_request, **kwargs)
+        result = await _super._search_base(search_request, request, **kwargs)
 
         item_collection = ItemCollection(
             **{

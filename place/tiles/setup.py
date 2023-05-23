@@ -5,9 +5,9 @@ from setuptools import find_namespace_packages, setup
 install_requires = [
     "uvicorn[standard]",
     "psycopg[c]",
-    "titiler.application",
-    "titiler.pgstac",
-    "titiler.pgstac[psycopg-c]",
+    "titiler.application==0.11.7",
+    "titiler.pgstac==0.4.0",
+    "titiler.pgstac[psycopg-c]==0.4.0",
     "orjson",
 ]
 
@@ -15,7 +15,6 @@ extra_reqs = {
     "dev": [],
     "docs": []
 }
-
 
 setup(
     name="place.tiles",

@@ -25,29 +25,25 @@ class RenderConfig(BaseModel):
     mosaic_preview_zoom: Optional[int] = None
     mosaic_preview_coords: Optional[List[float]] = None
 
-    def get_full_render_qs(self, collection: str, item: Optional[str] = None) -> str:
+    def get_full_render_qs(self) -> str:
         """
         Return the full render query string, including the
         item, collection, render and assets parameters.
         """
-        collection_part = f"collection={collection}" if collection else ""
-        item_part = f"&item={item}" if item else ""
         asset_part = self.get_assets_params()
         render_part = self.get_render_params()
 
-        return "".join([collection_part, item_part, asset_part, render_part])
+        return "".join([asset_part, render_part])
 
-    def get_full_render_qs_raw(self, collection: str, item: Optional[str] = None) -> str:
+    def get_full_render_qs_raw(self) -> str:
         """
         Return the full render query string, including the
         item, collection, render and assets parameters.
         """
-        collection_part = f"collection={collection}" if collection else ""
-        item_part = f"&item={item}" if item else ""
         asset_part = self.get_assets_params()
         render_part = self.get_render_params_raw()
 
-        return "".join([collection_part, item_part, asset_part, render_part])
+        return "".join([asset_part, render_part])
 
     def get_assets_params(self) -> str:
         """

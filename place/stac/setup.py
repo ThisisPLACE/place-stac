@@ -4,12 +4,12 @@ from setuptools import find_namespace_packages, setup
 
 install_requires = [
     "orjson",
-    "stac-fastapi.pgstac",
-    "stac-fastapi.api",
-    "stac-fastapi.types",
-    "stac-fastapi.extensions",
+    "stac-fastapi.pgstac==2.4.7",
+    "stac-fastapi.api==2.4.7",
+    "stac-fastapi.types==2.4.7",
+    "stac-fastapi.extensions==2.4.7",
     "uvicorn[standard]",
-    "pypgstac[psycopg]",
+    "pypgstac[psycopg]==0.7.6",
     "pygeoif==0.7",
 ]
 
@@ -17,7 +17,6 @@ extra_reqs = {
     "dev": [],
     "docs": []
 }
-
 
 setup(
     name="place.stac",

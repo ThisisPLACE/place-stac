@@ -63,10 +63,13 @@ def map(
             content=f"No item map available for collection {collection}",
         )
 
-    qs = render_config.get_full_render_qs(collection, item)
-    tilejson_url = pc_tile_factory.url_for(request, "tilejson")
-    tilejson_url += f"?{qs}"
+    qs: str = render_config.get_full_render_qs(collection, item)
+    tilejson_url: str = pc_tile_factory.url_for(request, "tilejson")
+    print("TESTING")
     print(tilejson_url)
+    print("TESTING")
+    print(qs)
+    tilejson_url = str(tilejson_url) + str(f"?{qs}")
 
     item_url = urljoin(
         Settings().get_stac_api_href(request),

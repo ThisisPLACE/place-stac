@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import FastAPI
+from rio_tiler.io import STACReader
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
@@ -10,10 +11,18 @@ from starlette_cramjam.middleware import CompressionMiddleware
 from titiler.application import __version__ as titiler_version
 from titiler.application.settings import ApiSettings
 from titiler.pgstac.db import close_db_connection, connect_to_db
-from titiler.pgstac.factory import MosaicTilerFactory
+from titiler.pgstac.dependencies import ItemPathParams
+from titiler.pgstac.reader import PgSTACReader
+#from titiler.pgstac.factory import MosaicTilerFactory
 
-from titiler.application.routers import cog, mosaic, stac, tms
-from titiler.application.settings import ApiSettings
+#from titiler.application.routers import mosaic, tms
+from titiler.core.resources.enums import OptionalHeader
+from titiler.core.factory import (
+    AlgorithmFactory,
+    MultiBaseTilerFactory,
+    TilerFactory,
+    TMSFactory,
+)
 from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
 from titiler.core.middleware import (
     CacheControlMiddleware,
@@ -21,13 +30,23 @@ from titiler.core.middleware import (
     LowerCaseQueryStringMiddleware,
     TotalTimeMiddleware,
 )
+from titiler.extensions import (
+    cogValidateExtension,
+    cogViewerExtension,
+    stacExtension,
+    stacViewerExtension,
+)
 from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 
-from place.tiles.endpoints import item, mosaic
+#from place.tiles.endpoints import item, mosaic
 from place.tiles.settings import Settings
 
 
 settings = Settings()
+if settings.debug:
+    optional_headers = [OptionalHeader.server_timing, OptionalHeader.x_assets]
+else:
+    optional_headers = []
 
 app = FastAPI(
     title=settings.name,
@@ -36,19 +55,43 @@ app = FastAPI(
     root_path=settings.root_path,
 )
 
+###############################################################################
+# STAC Item Endpoints
+stac = MultiBaseTilerFactory(
+    reader=PgSTACReader,
+    path_dependency=ItemPathParams,
+    optional_headers=optional_headers,
+    router_prefix="/collections/{collection_id}/items/{item_id}",
+)
 app.include_router(
-    item.pc_tile_factory.router,
-    prefix="/item",
-    tags=["Item tile endpoints"],
+    stac.router, tags=["Item"], prefix="/collections/{collection_id}/items/{item_id}"
 )
 
-app.include_router(
-    mosaic.pgstac_mosaic_factory.router,
-    prefix="/mosaic",
-    tags=["PgSTAC Mosaic endpoints"],
-)
+###############################################################################
+# STAC endpoints
+# if not settings.disable_stac:
+#     stac = MultiBaseTilerFactory(
+#         reader=STACReader,
+#         router_prefix="/stac",
+#         extensions=[
+#             stacViewerExtension(),
+#         ],
+#     )
 
-app.include_router(tms.router, tags=["TileMatrixSets"])
+#     app.include_router(
+#         stac.router, prefix="/stac", tags=["SpatioTemporal Asset Catalog"]
+#     )
+
+###############################################################################
+# TileMatrixSets endpoints
+tms = TMSFactory()
+app.include_router(tms.router, tags=["Tiling Schemes"])
+
+###############################################################################
+# Algorithms endpoints
+algorithms = AlgorithmFactory()
+app.include_router(algorithms.router, tags=["Algorithms"])
+
 add_exception_handlers(app, DEFAULT_STATUS_CODES)
 add_exception_handlers(app, MOSAIC_STATUS_CODES)
 
