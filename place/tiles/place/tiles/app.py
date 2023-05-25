@@ -1,26 +1,16 @@
 """Place Tiler"""
-
-import logging
-
 from fastapi import FastAPI
-from rio_tiler.io import STACReader
 from starlette.middleware.cors import CORSMiddleware
-from starlette.requests import Request
-from starlette.responses import HTMLResponse
 from starlette_cramjam.middleware import CompressionMiddleware
 from titiler.application import __version__ as titiler_version
-from titiler.application.settings import ApiSettings
 from titiler.pgstac.db import close_db_connection, connect_to_db
 from titiler.pgstac.dependencies import ItemPathParams
 from titiler.pgstac.reader import PgSTACReader
-#from titiler.pgstac.factory import MosaicTilerFactory
 
-#from titiler.application.routers import mosaic, tms
 from titiler.core.resources.enums import OptionalHeader
 from titiler.core.factory import (
     AlgorithmFactory,
     MultiBaseTilerFactory,
-    TilerFactory,
     TMSFactory,
 )
 from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
@@ -38,7 +28,7 @@ from titiler.extensions import (
 )
 from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 
-#from place.tiles.endpoints import item, mosaic
+from place.tiles.reader import UrlRewritePgSTACReader
 from place.tiles.settings import Settings
 
 
@@ -58,7 +48,10 @@ app = FastAPI(
 ###############################################################################
 # STAC Item Endpoints
 stac = MultiBaseTilerFactory(
-    reader=PgSTACReader,
+    reader=UrlRewritePgSTACReader(
+        public_url_root=settings.public_url_root,
+        private_url_root=settings.private_url_root
+    ),
     path_dependency=ItemPathParams,
     optional_headers=optional_headers,
     router_prefix="/collections/{collection_id}/items/{item_id}",
@@ -66,21 +59,6 @@ stac = MultiBaseTilerFactory(
 app.include_router(
     stac.router, tags=["Item"], prefix="/collections/{collection_id}/items/{item_id}"
 )
-
-###############################################################################
-# STAC endpoints
-# if not settings.disable_stac:
-#     stac = MultiBaseTilerFactory(
-#         reader=STACReader,
-#         router_prefix="/stac",
-#         extensions=[
-#             stacViewerExtension(),
-#         ],
-#     )
-
-#     app.include_router(
-#         stac.router, prefix="/stac", tags=["SpatioTemporal Asset Catalog"]
-#     )
 
 ###############################################################################
 # TileMatrixSets endpoints

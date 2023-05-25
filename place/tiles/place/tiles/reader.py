@@ -1,128 +1,54 @@
-import logging
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Type
+"""Custom STAC reader."""
+
+from typing import Dict, Optional, Set, Type
 
 import attr
-import morecantile
-from cogeo_mosaic.errors import NoAssetFoundError
-from fastapi import HTTPException
-from geojson_pydantic import Polygon
-from rio_tiler.errors import InvalidAssetName, MissingAssets, TileOutsideBounds
-from rio_tiler.models import ImageData
-from rio_tiler.mosaic import mosaic_reader
-from starlette.requests import Request
-from titiler.core.dependencies import DefaultDependency
-from titiler.pgstac import mosaic as pgstac_mosaic
+import pystac
+from morecantile import TileMatrixSet
+from rasterio.crs import CRS
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.io import BaseReader, COGReader
+from rio_tiler.io.stac import DEFAULT_VALID_TYPE
+from titiler.pgstac.reader import PgSTACReader
 
 from place.common.render import get_render_config
-from place.tiles.settings import Settings
-
-logger = logging.getLogger(__name__)
 
 
-@dataclass(init=False)
-class ReaderParams(DefaultDependency):
-    """reader parameters."""
+class UrlRewritePgSTACReader(PgSTACReader):
 
-    request: Request = field(init=False)
+    input: pystac.Item = attr.ib()
 
-    def __init__(self, request: Request):
-        """Initialize ReaderParams"""
-        self.request = request
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
+    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
-@attr.s
-class PGSTACBackend(pgstac_mosaic.PGSTACBackend):
-    """PgSTAC Mosaic Backend."""
+    include_assets: Optional[Set[str]] = attr.ib(default=None)
+    exclude_assets: Optional[Set[str]] = attr.ib(default=None)
 
-    reader: Type[pgstac_mosaic.CustomSTACReader] = attr.ib(init=False, default=pgstac_mosaic.CustomSTACReader)
+    include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
+    exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
 
-    # We make request an optional attribute to avoid re-writing
-    # the whole list of attribute
-    request: Optional[Request] = attr.ib(default=None)
+    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader_options: Dict = attr.ib(factory=dict)
 
-    # Override from PGSTACBackend to use collection
-    def assets_for_tile(
-        self, x: int, y: int, z: int, collection: Optional[str] = None, **kwargs: Any
-    ) -> List[Dict]:
-        settings = Settings()
+    def _get_asset_url(self, asset: str) -> str:
+        """Validate asset names and return rewritten asset url.
 
-        # Require a collection
-        if not collection:
-            raise HTTPException(
-                status_code=422,
-                detail="Tile request must contain a collection parameter.",
-            )
+        This is useful if, for instance, a publicly accessible URI
+        would more quickly be accessed via a private URI.
 
-        render_config = get_render_config(collection)
+        Args:
+            asset (str): STAC asset name.
 
-        # Don't render if this collection is unconfigured
-        if not render_config:
-            return []
+        Returns:
+            str: STAC asset href, rewritten.
 
-        # Check that the zoom isn't lower than minZoom
-        if render_config.minzoom and render_config.minzoom > z:
-            return []
-
-        asset_kwargs = {**kwargs, "items_limit": 10}
-
-        bbox = self.tms.bounds(morecantile.Tile(x, y, z))
-        assets = self.get_assets(Polygon.from_bounds(*bbox), **asset_kwargs)
-
-        return assets
-
-    # override from PGSTACBackend to pass through collection
-    def tile(
-        self,
-        tile_x: int,
-        tile_y: int,
-        tile_z: int,
-        reverse: bool = False,
-        collection: Optional[str] = None,
-        scan_limit: Optional[int] = None,
-        items_limit: Optional[int] = None,
-        time_limit: Optional[int] = None,
-        exitwhenfull: Optional[bool] = None,
-        skipcovered: Optional[bool] = None,
-        **kwargs: Any,
-    ) -> Tuple[ImageData, List[str]]:
-        """Get Tile from multiple observation."""
-        mosaic_assets = self.assets_for_tile(
-            tile_x,
-            tile_y,
-            tile_z,
-            collection=collection,
-            scan_limit=scan_limit,
-            items_limit=items_limit,
-            time_limit=time_limit,
-            exitwhenfull=exitwhenfull,
-            skipcovered=skipcovered,
+        """
+        asset_url = super()._get_asset_url(asset)
+        render_config = get_render_config(self.input.collection)
+        return asset_url.replace(
+            render_config.public_url_root,
+            render_config.private_url_root
         )
-
-        if not mosaic_assets:
-            raise NoAssetFoundError(
-                f"No assets found for tile {tile_z}-{tile_x}-{tile_y}"
-            )
-
-        if reverse:
-            mosaic_assets = list(reversed(mosaic_assets))
-
-        def _reader(
-            item: Dict[str, Any], x: int, y: int, z: int, **kwargs: Any
-        ) -> ImageData:
-            with self.reader(
-                item, tms=self.tms, **self.reader_options  # type: ignore
-            ) as src_dst:
-                return src_dst.tile(x, y, z, **kwargs)
-
-        tile = mosaic_reader(
-            mosaic_assets,
-            _reader,
-            tile_x,
-            tile_y,
-            tile_z,
-            allowed_exceptions=(TileOutsideBounds, MissingAssets, InvalidAssetName),
-            **kwargs,
-        )
-
-        return tile

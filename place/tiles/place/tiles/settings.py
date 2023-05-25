@@ -11,10 +11,6 @@ class Settings(ApiSettings):
     port: int = Field(env="TILER_PORT", default=8000)
     reload: bool = Field(env="TILER_RELOAD", default=True)
 
-    stac_api_url: str = os.environ["STAC_API_URL"]
-
-    stac_api_href: str = os.environ["STAC_API_HREF"]
-
     def get_stac_api_href(self, request: Request) -> str:
         """Generates the STAC API HREF.
         If the setting for the stac_api_href

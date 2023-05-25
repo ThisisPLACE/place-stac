@@ -24,6 +24,8 @@ class RenderConfig(BaseModel):
     maxzoom: Optional[int] = 30
     mosaic_preview_zoom: Optional[int] = None
     mosaic_preview_coords: Optional[List[float]] = None
+    public_url_root: str = "https://stac.thisisplace.org/tiles/"
+    private_url_root: str = "file:///data/"
 
     def get_full_render_qs(self) -> str:
         """
@@ -69,11 +71,12 @@ class RenderConfig(BaseModel):
         json_dumps = orjson_dumps
 
 
+DEFAULT_CONFIG = RenderConfig(render_params= {"asset_bidx": "cog|1"})
 IVORY_COAST_CONFIG = RenderConfig(render_params={"asset_bidx": "cog|1,2,3"})
 
-RENDER_CONFIGS = {
+RENDER_CONFIGS: List[RenderConfig] = {
     "IvoryCoast-Abidjian-Adjame": IVORY_COAST_CONFIG
 }
 
 def get_render_config(collection_id: str) -> RenderConfig:
-    return RENDER_CONFIGS[collection_id]
+    return RENDER_CONFIGS.get(collection_id, DEFAULT_CONFIG)

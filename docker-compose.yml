@@ -1,6 +1,17 @@
 version: '3'
 services:
-
+  nginx:
+    image: place-nginx
+    container_name: place-nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    networks:
+      - stac-api
+    volumes:
+      - ./nginx/etc/nginx:/etc/nginx
+    ports:
+      - 8080:80
   stac:
     container_name: place-stac-server
     image: place-stac-server
@@ -28,7 +39,9 @@ services:
       - DB_MAX_CONN_SIZE=1
       - USE_API_HYDRATE=${USE_API_HYDRATE:-false}
     ports:
-      - "8082:8082"
+      - "8081:8081"
+    networks:
+      - stac-api
     volumes:
       - ./place:/app/place
       - ./scripts:/app/scripts
@@ -51,13 +64,10 @@ services:
       - POSTGRES_PORT=5432
       # Application
       - HOST=0.0.0.0
-      - PORT=8000
-      # STAC server
-      - STAC_API_URL=stac:8082
-      - STAC_API_HREF=localhost:8082
+      - PORT=8082
       # Uvicorn
       # http://www.uvicorn.org/settings/#production
-      - WEB_CONCURRENCY=1
+      - WEB_CONCURRENCY=4
       # GDAL config
       - CPL_TMPDIR=/tmp
       - GDAL_CACHEMAX=75%
@@ -73,7 +83,9 @@ services:
       - AWS_S3_ENDPOINT=s3.af-south-1.amazonaws.com
       - AWS_REGION=af-south-1
     ports:
-      - "8000:8000"
+      - "8082:8082"
+    networks:
+      - stac-api
     depends_on:
       - database
     volumes:
@@ -92,6 +104,8 @@ services:
       - PGDATABASE=postgis
     ports:
       - "5439:5432"
+    networks:
+      - stac-api
     command: postgres -N 500
   load-place:
     image: place-stac-server
@@ -104,6 +118,8 @@ services:
     depends_on:
       - database
       - stac
+    networks:
+      - stac-api
     volumes:
       - ./place:/app/place
       - ./scripts:/app/scripts
@@ -114,3 +130,6 @@ services:
       - "python"
       - "/app/scripts/ingest_place.py"
       - "database:5432"
+
+networks:
+  stac-api:
