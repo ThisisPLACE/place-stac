@@ -80,8 +80,8 @@ services:
       - VSI_CACHE=TRUE
       - VSI_CACHE_SIZE=536870912
       - AWS_NO_SIGN_REQUEST=TRUE
-      - AWS_S3_ENDPOINT=s3.af-south-1.amazonaws.com
-      - AWS_REGION=af-south-1
+      # - AWS_S3_ENDPOINT=s3.af-south-1.amazonaws.com
+      # - AWS_REGION=af-south-1
     ports:
       - "8082:8082"
     networks:
