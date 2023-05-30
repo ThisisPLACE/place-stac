@@ -1,6 +1,6 @@
 """FastAPI application using PGStac."""
-import os
-
+from fastapi import Request
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import ORJSONResponse
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
@@ -38,6 +38,14 @@ api = StacApi(
 )
 app = api.app
 
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html(req: Request):
+    root_path = req.scope.get("root_path", "").rstrip("/")
+    openapi_url = root_path + app.openapi_url
+    return get_swagger_ui_html(
+        openapi_url=openapi_url,
+        title="API",
+    )
 
 @app.on_event("startup")
 async def startup_event():

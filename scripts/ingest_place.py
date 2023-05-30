@@ -1,19 +1,24 @@
 import os
 from pathlib import Path
 
+import orjson
 from pypgstac.load import Loader, Methods, PgstacDB
 
-DATA_DIR =os.path.join(os.path.join(os.path.dirname(__file__), ".."), "data")
-collections = os.path.join(DATA_DIR, "collections")
-items = os.path.join(DATA_DIR, "items")
+collection = "/app/data/collections/abidjian.json"
+items = "/app/data/items"
 
 
 def load_test_data() -> None:
     with PgstacDB() as conn:
         loader = Loader(db=conn)
-        for coll_path in Path(collections).glob("*.json"):
-            loader.load_collections(coll_path, Methods.upsert)
-        for item_path in Path(items).glob("*.json"):
-            loader.load_items(item_path, Methods.upsert)
+        with open(collection, "rb") as f:
+            c = orjson.loads(f.read())
+            loader.load_collections([c], Methods.upsert)
+        item_paths = Path(items).glob("*.json")
+        for path in item_paths:
+            with open(str(path), "rb") as f:
+                i = orjson.loads(f.read())
+                loader.load_items([i], Methods.upsert)
+
 
 load_test_data()

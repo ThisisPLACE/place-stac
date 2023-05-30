@@ -1,0 +1,118 @@
+version: '3'
+services:
+
+  nginx:
+    image: place-nginx
+    container_name: place-nginx
+    network_mode: host
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    volumes:
+      - ./nginx/etc/nginx:/etc/nginx
+  stac:
+    container_name: place-stac-server
+    image: place-stac-server
+    network_mode: host
+    build:
+      context: .
+      dockerfile: place/stac/Dockerfile
+    platform: linux/amd64
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8081
+      - TILER_ROOT=http://localhost:8082
+      - RELOAD=true
+      - POSTGRES_USER=username
+      - POSTGRES_PASS=password
+      - POSTGRES_DBNAME=postgis
+      - POSTGRES_HOST_READER=localhost
+      - POSTGRES_HOST_WRITER=localhost
+      - POSTGRES_PORT=5432
+      - WEB_CONCURRENCY=10
+      - VSI_CACHE=TRUE
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+      - DB_MIN_CONN_SIZE=1
+      - DB_MAX_CONN_SIZE=1
+      - USE_API_HYDRATE=${USE_API_HYDRATE:-false}
+    volumes:
+      - ./place:/app/place
+      - ./scripts:/app/scripts
+    depends_on:
+      - database
+    command:
+      bash -c "./scripts/wait-for-it.sh localhost:5432 && python -m place.stac.app"
+  tiler:
+    container_name: place-stac-tiler
+    platform: linux/amd64
+    network_mode: host
+    build:
+      context: .
+      dockerfile: place/tiles/Dockerfile
+    environment:
+      # pg connection
+      - POSTGRES_USER=username
+      - POSTGRES_PASS=password
+      - POSTGRES_DBNAME=postgis
+      - POSTGRES_HOST=localhost
+      - POSTGRES_PORT=5432
+      # Application
+      - TILER_HOST=0.0.0.0
+      - TILER_PORT=8082
+      - TILER_ROOT_PATH=/data/
+      # STAC server
+      - STAC_API_URL=localhost:8081
+      - STAC_API_HREF=localhost:8081
+      # Uvicorn
+      # http://www.uvicorn.org/settings/#production
+      - WEB_CONCURRENCY=1
+      # GDAL config
+      - CPL_TMPDIR=/tmp
+      - GDAL_CACHEMAX=75%
+      - GDAL_INGESTED_BYTES_AT_OPEN=32768
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_HTTP_MULTIPLEX=YES
+      - GDAL_HTTP_VERSION=2
+      - PYTHONWARNINGS=ignore
+      - VSI_CACHE=TRUE
+      - VSI_CACHE_SIZE=536870912
+      - AWS_NO_SIGN_REQUEST=TRUE
+      - AWS_S3_ENDPOINT=s3.af-south-1.amazonaws.com
+      - AWS_REGION=af-south-1
+    depends_on:
+      - database
+    volumes:
+      - ./place:/app/place
+    command:
+      bash -c "./scripts/wait-for-it.sh localhost:5432 && python -m place.tiles.app"
+  database:
+    container_name: place-stac-db
+    image: ghcr.io/stac-utils/pgstac:v0.7.6
+    network_mode: host
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgis
+      - PGUSER=username
+      - PGPASSWORD=password
+      - PGDATABASE=postgis
+    command: postgres -N 500
+  load-place:
+    image: place-stac-server
+    network_mode: host
+    environment:
+      - PGUSER=username
+      - PGPASSWORD=password
+      - PGHOST=localhost
+      - PGDATABASE=postgis
+    depends_on:
+      - database
+      - stac
+    volumes:
+      - ./place:/app/place
+      - ./scripts:/app/scripts
+      - ./data:/app/data
+    command:
+      bash -c "./scripts/wait-for-it.sh localhost:5432 && python /app/scripts/ingest_place.py localhost:5432"

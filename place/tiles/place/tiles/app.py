@@ -48,10 +48,7 @@ app = FastAPI(
 ###############################################################################
 # STAC Item Endpoints
 stac = MultiBaseTilerFactory(
-    reader=UrlRewritePgSTACReader(
-        public_url_root=settings.public_url_root,
-        private_url_root=settings.private_url_root
-    ),
+    reader=PgSTACReader,
     path_dependency=ItemPathParams,
     optional_headers=optional_headers,
     router_prefix="/collections/{collection_id}/items/{item_id}",

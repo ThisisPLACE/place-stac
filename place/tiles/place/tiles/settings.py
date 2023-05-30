@@ -8,8 +8,9 @@ from titiler.application.settings import ApiSettings
 class Settings(ApiSettings):
 
     host: str = Field(env="TILER_HOST", default="0.0.0.0")
-    port: int = Field(env="TILER_PORT", default=8000)
+    port: int = Field(env="TILER_PORT", default=8082)
     reload: bool = Field(env="TILER_RELOAD", default=True)
+    root_path: str = Field(env="TILER_ROOT_PATH", default="/data/")
 
     def get_stac_api_href(self, request: Request) -> str:
         """Generates the STAC API HREF.

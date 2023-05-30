@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 import pystac
 from fastapi import Request
 from stac_fastapi.types.stac import Collection, Item
+from stac_fastapi.types.requests import get_base_url
 
 from place.common.render import RenderConfig
 from place.stac.settings import Settings
@@ -34,8 +35,7 @@ class LinkInjector:
     ) -> None:
         self.collection_id = collection_id
         self.render_config = render_config
-        self.tiler_href = Settings().tiler_root
-        print(Settings())
+        self.tiler_href = urljoin(get_base_url(request), "data/")
 
     def inject_collection(self, collection: Collection) -> None:
         """Inject rendering links to a collection"""
@@ -83,6 +83,8 @@ class LinkInjector:
     def _get_item_preview_asset(self, item_id: str) -> Dict[str, Any]:
         qs = self.render_config.get_full_render_qs()
         href = urljoin(self.tiler_href, f"collections/{self.collection_id}/items/{item_id}/preview.png?{qs}")
+        print(f"tiler_href: {self.tiler_href}")
+        print(f"href: {href}")
 
         return {
             "title": "Rendered preview",
@@ -104,9 +106,10 @@ class LinkInjector:
         }
 
     def _get_item_map_link(self, item_id: str) -> Dict[str, Any]:
+        qs = self.render_config.get_full_render_qs_raw()
         href = urljoin(
             self.tiler_href,
-            f"collections/{self.collection_id}/items/{item_id}/map"
+            f"collections/{self.collection_id}/items/{item_id}/map?{qs}"
         )
 
         return {
