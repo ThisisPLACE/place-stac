@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import math
@@ -10,7 +11,6 @@ from pyexiv2 import ImageData
 from stac_pydantic.item import Item
 from stac_pydantic.shared import Asset
 
-
 # Necessary to work with sony exif data
 pyexiv2.set_log_level(4)
 
@@ -21,9 +21,11 @@ session = boto3.Session()
 s3 = session.client('s3')
 paginator = s3.get_paginator('list_objects_v2')
 
+
 def parse_dt(dt_str):
     """Parse a datetime string into a datetime object."""
     return datetime.strptime(dt_str, '%Y:%m:%d %H:%M:%S')
+
 
 def parse_dt_rfc3339(dt_str):
     """Convert a datetime string to an RFC 3339-compliant string."""
@@ -38,6 +40,7 @@ def parse_dt_rfc3339(dt):
     dt = datetime.strptime(input_str, '%Y:%m:%d %H:%M:%S')
 
     return dt
+
 
 def dms_to_decimal(dms_str, direction):
     """Convert a string of degrees, minutes, seconds to decimal degrees."""
@@ -115,6 +118,7 @@ def list_s3_objects(s3uri: str):
         keys = keys + [obj['Key'] for obj in page.get('Contents', [])]
     return keys
 
+
 def s3uri_to_id(key: str):
     """Convert an S3 URI to a STAC Item ID."""
     split = key.split("/")
@@ -124,6 +128,7 @@ def s3uri_to_id(key: str):
         return filename
     else:
         return f"{location}_{filename}"
+
 
 def read_all_metadata(s3uri: str, max_workers=10):
     """Read all metadata from jpg images in an S3 bucket."""
@@ -150,6 +155,8 @@ def read_all_metadata(s3uri: str, max_workers=10):
         })
     return processed
 
+
+# Keep this around to later be used to construct a bounding box for a collection
 def merge_bboxes(bboxes):
     min_longitude = min(box[0] for box in bboxes)
     min_latitude = min(box[1] for box in bboxes)
@@ -198,8 +205,35 @@ def build_stac_item(md, collection_id: str) -> Item:
     return item
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Process S3 URI and collection ID.')
+    parser.add_argument('--s3_uri', type=str, help='S3 URI')
+    parser.add_argument('--collection_id', type=str, help='Collection ID')
+    parser.add_argument('--output_file', type=str, help='File to write STAC Items to')
+    parser.add_argument('--output_s3', type=str, help='Optional output to an s3 bucket/key')
+    return parser.parse_args()
+
 
 if __name__ == '__main__':
-    for md in read_all_metadata('s3://placetrustuk/TCI/middle_caicos/raw/'):
-        item = build_stac_item(md, "middle_caicos")
-        print(item.json())
+    # Initialize a session with your AWS credentials
+    session = boto3.Session()
+
+    # Create an S3 client
+    s3 = session.client('s3')
+    paginator = s3.get_paginator('list_objects_v2')
+
+    args = parse_arguments()
+    print(f"Writing to file: {args.output_file}")
+    item_count = 0
+    with open(args.output_file, 'w') as f:
+        for md in read_all_metadata(args.s3_uri):
+            item_count += 1
+            item = build_stac_item(md, args.collection_id)
+            f.write(item.json() + '\n')
+
+    if args.output_s3:
+        print(f"Uploading to S3: {args.output_s3}")
+        bucket_name, key = parse_s3uri(args.output_s3)
+        s3.upload_file(args.output_file, bucket_name, key)
+
+    print(f"Items successfully created: {item_count}")
