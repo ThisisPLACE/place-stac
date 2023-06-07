@@ -99,8 +99,11 @@ services:
       - PGPASSWORD=password
       - PGDATABASE=postgis
     command: postgres -N 500
-  load-place:
-    image: place-stac-server
+  place-scripts:
+    image: place-stac-scripts
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile
     network_mode: host
     environment:
       - PGUSER=username

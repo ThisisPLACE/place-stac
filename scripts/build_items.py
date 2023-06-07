@@ -207,9 +207,9 @@ def build_stac_item(md, collection_id: str) -> Item:
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process S3 URI and collection ID.')
-    parser.add_argument('--s3_uri', type=str, help='S3 URI')
-    parser.add_argument('--collection_id', type=str, help='Collection ID')
-    parser.add_argument('--output_file', type=str, help='File to write STAC Items to')
+    parser.add_argument('--s3_uri', type=str, help='S3 URI', required=True)
+    parser.add_argument('--collection_id', type=str, help='Collection ID', required=True)
+    parser.add_argument('--output_file', type=str, help='File to write STAC Items to', required=True)
     parser.add_argument('--output_s3', type=str, help='Optional output to an s3 bucket/key')
     return parser.parse_args()
 
