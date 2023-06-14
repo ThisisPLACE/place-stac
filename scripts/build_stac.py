@@ -193,8 +193,8 @@ def build_stac_item(md, collection_id: str) -> Item:
 
 def build_stac_collection(collection_id: str, description: str, title: str, items: List[Item]) -> Collection:
     collection_bbox = merge_bboxes([item.bbox for item in items])
-    min_dt = min(item.datetime for item in items)
-    max_dt = max(item.datetime for item in items)
+    min_dt = min(item.properties.datetime for item in items)
+    max_dt = max(item.properties.datetime for item in items)
     collection_interval = [serialize_dt_rfc3339(min_dt), serialize_dt_rfc3339(max_dt)]
     collection_extent = Extent(
         spatial=SpatialExtent(bbox=[collection_bbox]),
@@ -232,13 +232,6 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    # Initialize a session with your AWS credentials
-    session = boto3.Session()
-
-    # Create an S3 client
-    s3 = session.client('s3')
-    paginator = s3.get_paginator('list_objects_v2')
-
     args = parse_arguments()
 
     ### Build STAC Items and Collection
@@ -251,7 +244,7 @@ if __name__ == '__main__':
         items.append(item)
 
     print("Constructing collection")
-    collection = build_stac_collection(args.collection_id, args.description, args.title, items)
+    collection = build_stac_collection(args.collection_id, args.collection_description, args.collection_title, items)
 
 
     ### Write STAC Items and Collection to file
