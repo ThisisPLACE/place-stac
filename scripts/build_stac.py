@@ -3,13 +3,16 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import math
+import os
+from typing import List
 from urllib.parse import urlparse
 
 import boto3
 import pyexiv2
 from pyexiv2 import ImageData
+from stac_pydantic.collection import Collection, Extent, SpatialExtent, TimeInterval
 from stac_pydantic.item import Item
-from stac_pydantic.shared import Asset
+from stac_pydantic.shared import Asset, Provider, ProviderRoles
 
 # Necessary to work with sony exif data
 pyexiv2.set_log_level(4)
@@ -22,24 +25,11 @@ s3 = session.client('s3')
 paginator = s3.get_paginator('list_objects_v2')
 
 
-def parse_dt(dt_str):
-    """Parse a datetime string into a datetime object."""
-    return datetime.strptime(dt_str, '%Y:%m:%d %H:%M:%S')
-
-
-def parse_dt_rfc3339(dt_str):
-    """Convert a datetime string to an RFC 3339-compliant string."""
-    rfc3339_str = parse_dt(dt_str).isoformat() + "Z"
-
-    return rfc3339_str
-
-
-def parse_dt_rfc3339(dt):
+def serialize_dt_rfc3339(dt):
     """Convert a datetime object to an RFC 3339-compliant string."""
-    input_str = dt
-    dt = datetime.strptime(input_str, '%Y:%m:%d %H:%M:%S')
+    rfc3339_string = dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-    return dt
+    return rfc3339_string
 
 
 def dms_to_decimal(dms_str, direction):
@@ -147,7 +137,7 @@ def read_all_metadata(s3uri: str, max_workers=10):
             "lat": dms_to_decimal(res['Exif.GPSInfo.GPSLatitude'], res['Exif.GPSInfo.GPSLatitudeRef']),
             "lng": dms_to_decimal(res['Exif.GPSInfo.GPSLongitude'], res['Exif.GPSInfo.GPSLongitudeRef']),
             "altitude": altitude,
-            "datetime": parse_dt(res['Exif.Image.DateTime']),
+            "datetime": serialize_dt_rfc3339(datetime.strptime(res['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
             "make": res['Exif.Image.Make'],
             "model": res['Exif.Image.Model'],
             "focal_length": res['Exif.Photo.FocalLengthIn35mmFilm'],
@@ -156,7 +146,6 @@ def read_all_metadata(s3uri: str, max_workers=10):
     return processed
 
 
-# Keep this around to later be used to construct a bounding box for a collection
 def merge_bboxes(bboxes):
     min_longitude = min(box[0] for box in bboxes)
     min_latitude = min(box[1] for box in bboxes)
@@ -183,7 +172,7 @@ def build_stac_item(md, collection_id: str) -> Item:
         )
     }
 
-    item = Item(
+    return Item(
         id=id,
         type='Feature',
         collection=collection_id,
@@ -202,15 +191,43 @@ def build_stac_item(md, collection_id: str) -> Item:
         links=[],
     )
 
-    return item
+def build_stac_collection(collection_id: str, description: str, title: str, items: List[Item]) -> Collection:
+    collection_bbox = merge_bboxes([item.bbox for item in items])
+    min_dt = min(item.datetime for item in items)
+    max_dt = max(item.datetime for item in items)
+    collection_interval = [serialize_dt_rfc3339(min_dt), serialize_dt_rfc3339(max_dt)]
+    collection_extent = Extent(
+        spatial=SpatialExtent(bbox=[collection_bbox]),
+        temporal=TimeInterval(interval=[collection_interval])
+    )
+    place_provider = Provider(
+        name='The PLACE Trust',
+        description='a permanent legal data trust based in the United Kingdom, which will hold all PLACE data and licenses, received from governments, in perpetuity.',
+        roles=[ProviderRoles.host, ProviderRoles.licensor, ProviderRoles.producer],
+        url='https://thisisplace.org'
+
+    )
+    collection = Collection(
+        id=collection_id,
+        description=description,
+        title=title,
+        extent=collection_extent,
+        license='PLACE Research License',
+        providers=[place_provider],
+        summaries={},
+        links=[],
+    )
+    return collection
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process S3 URI and collection ID.')
-    parser.add_argument('--s3_uri', type=str, help='S3 URI', required=True)
     parser.add_argument('--collection_id', type=str, help='Collection ID', required=True)
-    parser.add_argument('--output_file', type=str, help='File to write STAC Items to', required=True)
-    parser.add_argument('--output_s3', type=str, help='Optional output to an s3 bucket/key')
+    parser.add_argument('--collection_description', type=str, help='Collection Description', required=True)
+    parser.add_argument('--collection_title', type=str, help='Collection Title', required=True)
+    parser.add_argument('--input_directory', type=str, help='Directory which contains JPGs to be catalogued', required=True)
+    parser.add_argument('--output_directory', type=str, help='Dir to write STAC Items to', required=True)
+    parser.add_argument('--output_s3_backup', type=str, help='Optional backup output location as s3 uri', required=False)
     return parser.parse_args()
 
 
@@ -223,17 +240,41 @@ if __name__ == '__main__':
     paginator = s3.get_paginator('list_objects_v2')
 
     args = parse_arguments()
-    print(f"Writing to file: {args.output_file}")
+
+    ### Build STAC Items and Collection
     item_count = 0
-    with open(args.output_file, 'w') as f:
-        for md in read_all_metadata(args.s3_uri):
-            item_count += 1
-            item = build_stac_item(md, args.collection_id)
+    print(f"Constructing items from {args.input_directory}")
+    items: List[Item] = []
+    for item_metadata in read_all_metadata(args.input_directory):
+        item_count += 1
+        item = build_stac_item(item_metadata, args.collection_id)
+        items.append(item)
+
+    print("Constructing collection")
+    collection = build_stac_collection(args.collection_id, args.description, args.title, items)
+
+
+    ### Write STAC Items and Collection to file
+    item_file = os.path.join(args.output_directory, args.collection_id + "_items.json")
+    collection_file = os.path.join(args.output_directory, args.collection_id + "_collection.json")
+    print(f"Writing collection to file: {collection_file}")
+    with open(collection_file, 'w') as f:
+        f.write(collection.json())
+
+    print(f"Writing items to file: {item_file}")
+    with open(item_file, 'w') as f:
+        for item in items:
             f.write(item.json() + '\n')
 
-    if args.output_s3:
-        print(f"Uploading to S3: {args.output_s3}")
-        bucket_name, key = parse_s3uri(args.output_s3)
-        s3.upload_file(args.output_file, bucket_name, key)
+    if args.output_s3_backup:
+        item_file_s3 = os.path.join(args.output_s3_backup, args.collection_id + "_items.json")
+        collection_file_s3 = os.path.join(args.output_s3_backup, args.collection_id + "_collection.json")
+        print(f"Uploading item file to S3: {item_file_s3}")
+        item_bucket, item_key = parse_s3uri(item_file_s3)
+        s3.upload_file(item_file, item_bucket, item_key)
+
+        print(f"Uploading collection file to S3: {collection_file_s3}")
+        collection_bucket, collection_key = parse_s3uri(collection_file_s3)
+        s3.upload_file(collection_file, collection_bucket, collection_key)
 
     print(f"Items successfully created: {item_count}")
