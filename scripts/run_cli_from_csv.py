@@ -9,11 +9,8 @@ def execute_cli_command(cli, arg_set):
 
     argument_strings = []
     for field, value in arg_set.items():
-        print(field, value)
         argument_strings.append(f'--{field.strip()} "{value}"')
-        print(argument_strings)
     argument_string = " ".join(argument_strings)
-    print(argument_string)
     command = cli + " " + argument_string
 
     try:
