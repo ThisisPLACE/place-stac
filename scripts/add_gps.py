@@ -8,20 +8,27 @@ from GPSPhoto import gpsphoto
 def make_label_geotags(prefix, item):
     return {
         "input_file": f"{prefix}/{item[0]}",
-        "latitude": item[1],
-        "longitude": item[2],
-        "altitude": item[3]
+        "latitude": float(item[1]),
+        "longitude": float(item[2]),
+        "altitude": int(round(float(item[3])))
     }
 
 
-def make_label_imageslatlong(prefix, item):
-    return {
-        "input_file": f"{prefix}/{item[1]}",
-        "latitude": item[2],
-        "longitude": item[3],
-        "altitude": item[4]
-    }
-
+def make_label_nonstandard(prefix, item):
+    try:
+        return {
+            "input_file": f"{prefix}/{item[1]}",
+            "latitude": float(item[2]),
+            "longitude": float(item[3]),
+            "altitude": int(round(float(item[4])))
+        }
+    except ValueError:
+        return {
+            "input_file": f"{prefix}/{item[3]}",
+            "latitude": float(item[0]),
+            "longitude": float(item[1]),
+            "altitude": int(round(float(item[2])))
+        }
 
 def make_gps(label):
     return (
@@ -60,7 +67,7 @@ def run_dir(dir_path):
         for line in lines:
             result = line.strip("\n")
             result = result.split(",")
-            label = make_label_imageslatlong(dir_path, result)
+            label = make_label_nonstandard(dir_path, result)
             gps = make_gps(label)
             res.append(gps)
     return res
