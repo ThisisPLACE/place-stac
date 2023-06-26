@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import multiprocessing
+import os
 import subprocess
 
-def execute_cli_command(cli, args):
+def execute_cli_command(cli, arg_set):
 
-    for arg_set in args:
-        argument_strings = []
-        for field, value in arg_set.items():
-            print(field, value)
-            argument_strings.append(f'--{field.strip()} "{value}"')
-            print(argument_strings)
-        argument_string = " ".join(argument_strings)
-        print(argument_string)
-        command = cli + " " + argument_string
-    
-        try:
-            subprocess.run(command, check=True, shell=True)
-            print(f"Command executed successfully: {' '.join(command)}")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {' '.join(command)}")
-            raise
+    argument_strings = []
+    for field, value in arg_set.items():
+        print(field, value)
+        argument_strings.append(f'--{field.strip()} "{value}"')
+        print(argument_strings)
+    argument_string = " ".join(argument_strings)
+    print(argument_string)
+    command = cli + " " + argument_string
+
+    try:
+        subprocess.run(command, check=True, shell=True)
+        print(f"Command executed successfully: {command}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command: {' '.join(command)}")
+        raise
 
 
 def parse_csv_to_dict(csv_path):
@@ -43,5 +44,10 @@ if __name__ == "__main__":
                         help='path to the python script')
     args = parser.parse_args()
 
-    arguments = parse_csv_to_dict(args.csv)
-    execute_cli_command(args.script, arguments)
+    def execute_script(argument_set):
+        return execute_cli_command(args.script, argument_set)
+
+    argument_sets = parse_csv_to_dict(args.csv)
+    parallelism = min(os.cpu_count(), 4)
+    with multiprocessing.Pool(parallelism) as pool:
+        pool.map(execute_script, argument_sets)

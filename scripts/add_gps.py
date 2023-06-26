@@ -91,6 +91,10 @@ if __name__ == "__main__":
     for record in run_dir(args.input_directory):
         output_filename = f"{args.output_prefix}{os.path.basename(record[0])}"
         output_path = f"{args.output_directory}/{output_filename}"
+        # Skip if the file already exists
+        if os.path.exists(output_path):
+            print(f"File {output_path} already exists. Skipping.")
+            continue
         try:
             gpsphoto.GPSPhoto(record[0]).modGPSData(record[1], output_path)
         except FileNotFoundError as e:
