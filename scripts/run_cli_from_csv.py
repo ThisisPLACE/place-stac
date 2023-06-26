@@ -16,7 +16,7 @@ def execute_cli_command(cli, args):
         command = cli + " " + argument_string
     
         try:
-            subprocess.run(command, check=True)
+            subprocess.run(command, check=True, shell=True)
             print(f"Command executed successfully: {' '.join(command)}")
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {' '.join(command)}")
