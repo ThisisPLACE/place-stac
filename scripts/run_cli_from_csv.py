@@ -5,18 +5,22 @@ import subprocess
 
 def execute_cli_command(cli, args):
 
-    argument_strings = []
-    for field, value in args.items():
-        argument_strings.append(f'--{field} "{value}"')
-    argument_string = argument_strings.join(" ")
-    command = cli + " " + argument_string
+    for arg_set in args:
+        argument_strings = []
+        for field, value in arg_set.items():
+            print(field, value)
+            argument_strings.append(f'--{field.strip()} "{value}"')
+            print(argument_strings)
+        argument_string = " ".join(argument_strings)
+        print(argument_string)
+        command = cli + " " + argument_string
     
-    try:
-        subprocess.run(command, check=True)
-        print(f"Command executed successfully: {' '.join(command)}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {' '.join(command)}")
-        raise
+        try:
+            subprocess.run(command, check=True)
+            print(f"Command executed successfully: {' '.join(command)}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {' '.join(command)}")
+            raise
 
 
 def parse_csv_to_dict(csv_path):

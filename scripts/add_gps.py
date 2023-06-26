@@ -87,8 +87,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     os.makedirs(args.output_directory, exist_ok=True)
+    errored = []
     for record in run_dir(args.input_directory):
         output_filename = f"{args.output_prefix}{os.path.basename(record[0])}"
         output_path = f"{args.output_directory}/{output_filename}"
-        gpsphoto.GPSPhoto(record[0]).modGPSData(record[1], output_path)
+        try:
+            gpsphoto.GPSPhoto(record[0]).modGPSData(record[1], output_path)
+        except FileNotFoundError as e:
+            errored.append(record)
+            print(f"WARNING: did not find file at {record[0]}. Skipping.")
         print(f"Writing updated files to {output_path}")
+    if len(errored) > 0:
+        print(f"WARNING: {len(errored)} files were not found. See errors above for details.")
