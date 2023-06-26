@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
 import argparse
+import glob
 import os
 
 from GPSPhoto import gpsphoto
 
-def make_label(prefix, item):
+def make_label_geotags(prefix, item):
     return {
         "input_file": f"{prefix}/{item[0]}",
         "latitude": item[1],
         "longitude": item[2],
         "altitude": item[3]
     }
+
+
+def make_label_imageslatlong(prefix, item):
+    return {
+        "input_file": f"{prefix}/{item[1]}",
+        "latitude": item[2],
+        "longitude": item[3],
+        "altitude": item[4]
+    }
+
 
 def make_gps(label):
     return (
@@ -22,13 +33,34 @@ def make_gps(label):
     )
 
 
+def find_csv_files(directory):
+    csv_files = []
+
+    directory = directory.rstrip("/")
+    for file in glob.glob(os.path.join(directory, "*.csv")):
+        csv_files.append(file)
+
+    return csv_files
+
+
 def run_dir(dir_path):
-    with open(f"{dir_path}/Geotags.txt") as f:
-        res = []
-        for line in f:
+    res = []
+    if os.path.exists(f"{dir_path}/Geotags.txt"):
+        with open(f"{dir_path}/Geotags.txt") as f:
+            for line in f:
+                result = line.strip("\n")
+                result = result.split("\t")
+                label = make_label_geotags(dir_path, result)
+                gps = make_gps(label)
+                res.append(gps)
+    else: # Heuristic to find CSV file if no geotags is found
+        csv_file = find_csv_files(dir_path)[0]
+        with open(f"{dir_path}/{csv_file}") as f:
+            lines = f.readlines()[1:]
+        for line in lines:
             result = line.strip("\n")
-            result = result.split("\t")
-            label = make_label(dir_path, result)
+            result = result.split(",")
+            label = make_label_imageslatlong(dir_path, result)
             gps = make_gps(label)
             res.append(gps)
     return res
@@ -52,3 +84,4 @@ if __name__ == "__main__":
         output_filename = f"{args.output_prefix}{os.path.basename(record[0])}"
         output_path = f"{args.output_directory}/{output_filename}"
         gpsphoto.GPSPhoto(record[0]).modGPSData(record[1], output_path)
+        print(f"Writing updated files to {output_path}")
