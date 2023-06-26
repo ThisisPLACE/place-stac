@@ -43,7 +43,7 @@ def make_gps(label):
 def find_csv_files(directory):
     csv_files = []
 
-    directory = directory.rstrip("/")
+    directory = glob.escape(directory.rstrip("/"))
     for file in glob.glob(os.path.join(directory, "*.csv")):
         csv_files.append(file)
 

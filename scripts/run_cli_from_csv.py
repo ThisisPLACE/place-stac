@@ -20,7 +20,7 @@ def execute_cli_command(cli, arg_set):
         subprocess.run(command, check=True, shell=True)
         print(f"Command executed successfully: {command}")
     except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {' '.join(command)}")
+        print(f"Error executing command: {command}")
         raise
 
 
