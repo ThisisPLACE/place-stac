@@ -55,7 +55,7 @@ def run_dir(dir_path):
                 res.append(gps)
     else: # Heuristic to find CSV file if no geotags is found
         csv_file = find_csv_files(dir_path)[0]
-        with open(f"{dir_path}/{csv_file}") as f:
+        with open(csv_file) as f:
             lines = f.readlines()[1:]
         for line in lines:
             result = line.strip("\n")
