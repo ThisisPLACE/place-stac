@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import csv
-import multiprocessing
+import multiprocess
 import os
 import subprocess
 
@@ -36,9 +36,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a series of CLI tasks with arguments defined in CSV')
 
     parser.add_argument('-c', '--csv', metavar='CSV', type=str,
-                        help='path to the csv defining CLI args')
+                        help='path to the csv defining CLI args', required=True)
     parser.add_argument('-s', '--script', metavar='SCRIPT', type=str,
-                        help='path to the python script')
+                        help='path to the python script', required=True)
     args = parser.parse_args()
 
     def execute_script(argument_set):
@@ -46,5 +46,5 @@ if __name__ == "__main__":
 
     argument_sets = parse_csv_to_dict(args.csv)
     parallelism = min(os.cpu_count(), 4)
-    with multiprocessing.Pool(parallelism) as pool:
+    with multiprocess.Pool(parallelism) as pool:
         pool.map(execute_script, argument_sets)

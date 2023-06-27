@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import math
 import os
+import sys
 from typing import List
 from urllib.parse import urlparse
 
@@ -123,26 +124,28 @@ def s3uri_to_id(key: str):
 def read_all_metadata(s3uri: str, max_workers=10):
     """Read all metadata from jpg images in an S3 bucket."""
     bucket_name, prefix = parse_s3uri(s3uri)
-    obj_keys = [key for key in list_s3_objects(s3uri) if key.endswith(".jpg")]
+    obj_keys = [key for key in list_s3_objects(s3uri) if key.lower().endswith(".jpg") or key.lower().endswith(".jpeg")]
     obj_paths = [f"s3://{bucket_name}/{key}" for key in obj_keys]
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         read_tasks = [executor.submit(get_metadata, f"s3://{bucket_name}/{key}") for key in obj_keys]
         results = [task.result() for task in read_tasks]
     processed = []
     for idx, res in enumerate(results):
-        raw_altitude = res['Exif.GPSInfo.GPSAltitude'].split("/")
-        altitude = float(raw_altitude[0]) / float(raw_altitude[1])
-        processed.append({
+        processed_metadata = {
             "path": obj_paths[idx],
             "lat": dms_to_decimal(res['Exif.GPSInfo.GPSLatitude'], res['Exif.GPSInfo.GPSLatitudeRef']),
             "lng": dms_to_decimal(res['Exif.GPSInfo.GPSLongitude'], res['Exif.GPSInfo.GPSLongitudeRef']),
-            "altitude": altitude,
             "datetime": serialize_dt_rfc3339(datetime.strptime(res['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
             "make": res['Exif.Image.Make'],
             "model": res['Exif.Image.Model'],
             "focal_length": res['Exif.Photo.FocalLengthIn35mmFilm'],
             "exposure_time": res['Exif.Photo.ExposureTime']
-        })
+        }
+        if "Exif.GPSInfo.GPSAltitude" in res:
+            raw_altitude = res['Exif.GPSInfo.GPSAltitude'].split('/')
+            altitude = float(raw_altitude[0]) / float(raw_altitude[1])
+            processed_metadata["altitude"] = altitude
+        processed.append(processed_metadata)
     return processed
 
 
@@ -234,6 +237,12 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
 
+    item_file = os.path.join(args.output_directory, args.collection_id + "_items.json")
+    collection_file = os.path.join(args.output_directory, args.collection_id + "_collection.json")
+    if os.path.exists(collection_file):
+        print(f"Collection file already exists: {collection_file}")
+        sys.exit(0)
+
     ### Build STAC Items and Collection
     item_count = 0
     print(f"Constructing items from {args.input_directory}")
@@ -248,8 +257,6 @@ if __name__ == '__main__':
 
 
     ### Write STAC Items and Collection to file
-    item_file = os.path.join(args.output_directory, args.collection_id + "_items.json")
-    collection_file = os.path.join(args.output_directory, args.collection_id + "_collection.json")
     print(f"Writing collection to file: {collection_file}")
     with open(collection_file, 'w') as f:
         f.write(collection.json())
