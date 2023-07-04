@@ -24,8 +24,6 @@ class RenderConfig(BaseModel):
     maxzoom: Optional[int] = 30
     mosaic_preview_zoom: Optional[int] = None
     mosaic_preview_coords: Optional[List[float]] = None
-    public_url_root: str = "https://stac.thisisplace.org/tiles/"
-    private_url_root: str = "file:///data/"
 
     def get_full_render_qs(self) -> str:
         """

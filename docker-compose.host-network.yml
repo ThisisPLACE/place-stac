@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./nginx/etc/nginx:/etc/nginx
+      - /home/storage:/storage
   stac:
     container_name: place-stac-server
     image: place-stac-server

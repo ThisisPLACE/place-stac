@@ -6,6 +6,7 @@ import math
 import os
 import sys
 from typing import List
+import traceback
 from urllib.parse import urlparse
 
 import boto3
@@ -77,6 +78,7 @@ def get_metadata(s3uri: str, maxbytes: int = 65535):
         return exif_data
     except Exception as e:
         print(bucket_name, key)
+        print(traceback.format_exc())
 
 
 def get_bounding_box(lat, lon):
@@ -131,21 +133,25 @@ def read_all_metadata(s3uri: str, max_workers=10):
         results = [task.result() for task in read_tasks]
     processed = []
     for idx, res in enumerate(results):
-        processed_metadata = {
-            "path": obj_paths[idx],
-            "lat": dms_to_decimal(res['Exif.GPSInfo.GPSLatitude'], res['Exif.GPSInfo.GPSLatitudeRef']),
-            "lng": dms_to_decimal(res['Exif.GPSInfo.GPSLongitude'], res['Exif.GPSInfo.GPSLongitudeRef']),
-            "datetime": serialize_dt_rfc3339(datetime.strptime(res['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
-            "make": res['Exif.Image.Make'],
-            "model": res['Exif.Image.Model'],
-            "focal_length": res['Exif.Photo.FocalLengthIn35mmFilm'],
-            "exposure_time": res['Exif.Photo.ExposureTime']
-        }
-        if "Exif.GPSInfo.GPSAltitude" in res:
-            raw_altitude = res['Exif.GPSInfo.GPSAltitude'].split('/')
-            altitude = float(raw_altitude[0]) / float(raw_altitude[1])
-            processed_metadata["altitude"] = altitude
-        processed.append(processed_metadata)
+        try:
+            processed_metadata = {
+                "path": obj_paths[idx],
+                "lat": dms_to_decimal(res['Exif.GPSInfo.GPSLatitude'], res['Exif.GPSInfo.GPSLatitudeRef']),
+                "lng": dms_to_decimal(res['Exif.GPSInfo.GPSLongitude'], res['Exif.GPSInfo.GPSLongitudeRef']),
+                "datetime": serialize_dt_rfc3339(datetime.strptime(res['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
+                "make": res['Exif.Image.Make'],
+                "model": res['Exif.Image.Model'],
+                "focal_length": res['Exif.Photo.FocalLengthIn35mmFilm'],
+                "exposure_time": res['Exif.Photo.ExposureTime']
+            }
+            if "Exif.GPSInfo.GPSAltitude" in res:
+                raw_altitude = res['Exif.GPSInfo.GPSAltitude'].split('/')
+                altitude = float(raw_altitude[0]) / float(raw_altitude[1])
+                processed_metadata["altitude"] = altitude
+            processed.append(processed_metadata)
+        except TypeError:
+            print(f"Error processing metadata for {obj_paths[idx]}. Continuing...")
+            print(traceback.format_exc())
     return processed
 
 
@@ -166,8 +172,15 @@ def build_stac_item(md, collection_id: str) -> Item:
     dt = md['datetime']
 
     assets = {
-        'raw_jpg': Asset(
+        'raw_jpg_s3': Asset(
             href=md['path'],
+            type='image/jpeg',
+            title='Raw JPG',
+            description='Raw JPG image taken during drone flight.',
+            roles=['data'],
+        ),
+        'raw_jpg': Asset(
+            href=md['path'].replace("s3://place-data/", "http://77.68.117.1/data/files/"),
             type='image/jpeg',
             title='Raw JPG',
             description='Raw JPG image taken during drone flight.',
@@ -259,12 +272,12 @@ if __name__ == '__main__':
     ### Write STAC Items and Collection to file
     print(f"Writing collection to file: {collection_file}")
     with open(collection_file, 'w') as f:
-        f.write(collection.json())
+        f.write(collection.to_json())
 
     print(f"Writing items to file: {item_file}")
     with open(item_file, 'w') as f:
         for item in items:
-            f.write(item.json() + '\n')
+            f.write(item.to_json() + '\n')
 
     if args.output_s3_backup:
         item_file_s3 = os.path.join(args.output_s3_backup, args.collection_id + "_items.json")
