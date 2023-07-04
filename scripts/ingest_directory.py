@@ -18,9 +18,9 @@ def load_test_data() -> None:
     with PgstacDB() as conn:
         loader = Loader(db=conn)
         for collection_file in collection_files:
-            loader.load_collections(collection_file, Methods.upsert)
-        for items_file in items__files:
-            loader.load_items(items_file, Methods.upsert)
+            loader.load_collections(os.path.join(directory, collection_file), Methods.upsert)
+        for items_file in items_files:
+            loader.load_items(os.path.join(directory, items_file), Methods.upsert)
 
 
 load_test_data()
