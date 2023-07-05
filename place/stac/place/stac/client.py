@@ -40,31 +40,12 @@ class PlaceClient(CoreCrudClient):
     def inject_item_links(self, item: Item, request: Request) -> Item:
         """Add extra/non-mandatory links to an Item"""
         collection_id = item.get("collection", "")
-        if collection_id:
+        if collection_id and item.assets.get("cog"):
             render_config = get_render_config(collection_id)
             LinkInjector(collection_id, render_config, request).inject_item(item)
 
         return item
 
-
-    async def get_collection(self, collection_id: str, request: Request, **kwargs: Any) -> Collection:
-        """Get collection by id and inject PQE links.
-        Called with `GET /collections/{collection_id}`.
-        In the Planetary Computer, this method has been modified to inject
-        links which facilitate users to accessing rendered assets and
-        associated metadata.
-        Args:
-            collection_id: Id of the collection.
-        Returns:
-            Collection.
-        """
-        _super: CoreCrudClient = super()
-
-        try:
-            result = await _super.get_collection(collection_id, request, **kwargs)
-        except NotFoundError:
-            raise NotFoundError(f"No collection with id '{collection_id}' found!")
-        return self.inject_collection_links(result, request)
 
     async def get_item(self, item_id: str, collection_id: str, request: Request, **kwargs: Any) -> Item:
         _super: CoreCrudClient = super()
