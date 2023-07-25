@@ -1,16 +1,16 @@
 version: '3'
 services:
 
-  nginx:
-    image: place-nginx
-    container_name: place-nginx
-    network_mode: host
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    volumes:
-      - ./nginx/etc/nginx:/etc/nginx
-      - /home/storage:/storage
+  # nginx:
+  #   image: place-nginx
+  #   container_name: place-nginx
+  #   network_mode: host
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./nginx/etc/nginx:/etc/nginx
+  #     - /home/storage:/storage
   stac:
     container_name: place-stac-server
     image: place-stac-server
@@ -29,7 +29,7 @@ services:
       - POSTGRES_DBNAME=postgis
       - POSTGRES_HOST_READER=localhost
       - POSTGRES_HOST_WRITER=localhost
-      - POSTGRES_PORT=5432
+      - POSTGRES_PORT=5433
       - WEB_CONCURRENCY=10
       - VSI_CACHE=TRUE
       - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
@@ -43,7 +43,7 @@ services:
     depends_on:
       - database
     command:
-      bash -c "./scripts/wait-for-it.sh localhost:5432 && python -m place.stac.app"
+      bash -c "./scripts/wait-for-it.sh localhost:5433 && python -m place.stac.app"
   tiler:
     container_name: place-stac-tiler
     platform: linux/amd64
@@ -57,7 +57,7 @@ services:
       - POSTGRES_PASS=password
       - POSTGRES_DBNAME=postgis
       - POSTGRES_HOST=localhost
-      - POSTGRES_PORT=5432
+      - POSTGRES_PORT=5433
       # Application
       - TILER_HOST=0.0.0.0
       - TILER_PORT=8082
@@ -87,7 +87,7 @@ services:
     volumes:
       - ./place:/app/place
     command:
-      bash -c "./scripts/wait-for-it.sh localhost:5432 && python -m place.tiles.app"
+      bash -c "./scripts/wait-for-it.sh localhost:5433 && python -m place.tiles.app"
   database:
     container_name: place-stac-db
     image: ghcr.io/stac-utils/pgstac:v0.7.6
@@ -119,4 +119,4 @@ services:
       - ./scripts:/app/scripts
       - ./data:/app/data
     command:
-      bash -c "./scripts/wait-for-it.sh localhost:5432 && python /app/scripts/ingest_place.py localhost:5432"
+      bash -c "./scripts/wait-for-it.sh localhost:5433 && python /app/scripts/ingest_place.py localhost:5433"
