@@ -61,7 +61,7 @@ services:
       # Application
       - TILER_HOST=0.0.0.0
       - TILER_PORT=8082
-      - TILER_ROOT_PATH=/data/
+      - TILER_ROOT_PATH=/data
       # STAC server
       - STAC_API_URL=localhost:8081
       - STAC_API_HREF=localhost:8081

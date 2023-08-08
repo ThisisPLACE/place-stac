@@ -20,15 +20,8 @@ from titiler.core.middleware import (
     LowerCaseQueryStringMiddleware,
     TotalTimeMiddleware,
 )
-from titiler.extensions import (
-    cogValidateExtension,
-    cogViewerExtension,
-    stacExtension,
-    stacViewerExtension,
-)
 from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 
-from place.tiles.reader import UrlRewritePgSTACReader
 from place.tiles.settings import Settings
 
 
