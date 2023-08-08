@@ -1,5 +1,6 @@
 """FastAPI application using PGStac."""
 from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import ORJSONResponse
 from stac_fastapi.api.app import StacApi
@@ -37,6 +38,13 @@ api = StacApi(
     search_post_request_model=post_request_model,
 )
 app = api.app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html(req: Request):

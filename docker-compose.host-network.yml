@@ -99,7 +99,7 @@ services:
       - PGUSER=username
       - PGPASSWORD=password
       - PGDATABASE=postgis
-    command: postgres -N 500
+    command: postgres -N 500 -p 5433
   place-scripts:
     image: place-stac-scripts
     build:
@@ -111,6 +111,7 @@ services:
       - PGPASSWORD=password
       - PGHOST=localhost
       - PGDATABASE=postgis
+      - PGPORT=5433
     depends_on:
       - database
       - stac
