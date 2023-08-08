@@ -40,7 +40,7 @@ class PlaceClient(CoreCrudClient):
     def inject_item_links(self, item: Item, request: Request) -> Item:
         """Add extra/non-mandatory links to an Item"""
         collection_id = item.get("collection", "")
-        if collection_id and item.assets.get("cog"):
+        if collection_id and item["assets"].get("cog"):
             render_config = get_render_config(collection_id)
             LinkInjector(collection_id, render_config, request).inject_item(item)
 
