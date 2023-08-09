@@ -24,7 +24,7 @@ s3 = session.client('s3')
 paginator = s3.get_paginator('list_objects_v2')
 
 
-def serialize_dt_rfc3339(dt):
+def serialize_dt_rfc3339(dt) -> str:
     """Convert a datetime object to an RFC 3339-compliant string."""
     rfc3339_string = dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -125,7 +125,7 @@ def read_all_metadata(s3uri: str):
         try:
             img_lat = dms_to_decimal([ratio.decimal() for ratio in md['GPS GPSLatitude'].values], md['GPS GPSLatitudeRef'].values)
             img_lng =  dms_to_decimal([ratio.decimal() for ratio in md['GPS GPSLongitude'].values], md['GPS GPSLongitudeRef'].values)
-            img_datetime = serialize_dt_rfc3339(datetime.strptime(md['EXIF DateTimeOriginal'].values, '%Y:%m:%d %H:%M:%S'))
+            img_datetime = datetime.strptime(md['EXIF DateTimeOriginal'].values, '%Y:%m:%d %H:%M:%S')
         except KeyError:
             print(f"Key Error while reading metadata for {obj_paths[idx]}. Continuing...")
             print(traceback.format_exc())
@@ -138,11 +138,11 @@ def read_all_metadata(s3uri: str):
                 "datetime": img_datetime,
                 "make": md['Image Make'].values,
                 "model": md['Image Model'].values,
-                "focal_length": md['Exif FocalLengthIn35mmFilm'],
-                "exposure_time": md['Exif ExposureTime']
+                "focal_length": md['EXIF FocalLengthIn35mmFilm'].values[0],
+                "exposure_time": md['EXIF ExposureTime'].values[0].decimal()
             }
             if "GPS GPSAltitude" in md:
-                altitude = md['GPS GPSAltitude'].values.decimal()
+                altitude = md['GPS GPSAltitude'].values[0].decimal()
                 processed_metadata["altitude"] = altitude
             processed.append(processed_metadata)
         except TypeError:
@@ -150,7 +150,7 @@ def read_all_metadata(s3uri: str):
             print(traceback.format_exc())
         except KeyError:
             print(f"Error processing metadata for {obj_paths[idx]}. Continuing...")
-            print(pprint.pprint(md))
+            pprint.pprint(md)
             print(traceback.format_exc())
     return processed
 
@@ -278,7 +278,12 @@ if __name__ == '__main__':
     print(f"Writing items to file: {item_file}")
     with open(item_file, 'w') as f:
         for item in items:
-            f.write(item.to_json() + '\n')
+            try:
+                f.write(item.to_json() + '\n')
+            except Exception:
+                print(f"Error writing item to file: {item.id}")
+                pprint.pprint(item)
+                print(traceback.format_exc())
 
     if args.output_s3_backup:
         item_file_s3 = os.path.join(args.output_s3_backup, args.collection_id + "_items.json")
