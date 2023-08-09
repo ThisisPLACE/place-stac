@@ -31,10 +31,9 @@ def serialize_dt_rfc3339(dt):
     return rfc3339_string
 
 
-def dms_to_decimal(dms_str, direction):
+def dms_to_decimal(dms_list, direction):
     """Convert a string of degrees, minutes, seconds to decimal degrees."""
-    dms_list = dms_str.split(' ')
-    d, m, s = [fraction.decimal() for fraction in dms_list]
+    d, m, s = dms_list
     decimal_degrees = d + m / 60 + s / 3600
 
     if direction in ('W', 'S'):
@@ -124,8 +123,8 @@ def read_all_metadata(s3uri: str):
     processed = []
     for idx, md in enumerate(all_metadata):
         try:
-            img_lat = dms_to_decimal(md['GPS GPSLatitude'].values, md['GPS GPSLatitudeRef'].values)
-            img_lng =  dms_to_decimal(md['GPS GPSLongitude'].values, md['GPS GPSLongitudeRef'].values)
+            img_lat = dms_to_decimal([ratio.decimal() for ratio in md['GPS GPSLatitude'].values], md['GPS GPSLatitudeRef'].values)
+            img_lng =  dms_to_decimal([ratio.decimal() for ratio in md['GPS GPSLongitude'].values], md['GPS GPSLongitudeRef'].values)
             img_datetime = serialize_dt_rfc3339(datetime.strptime(md['EXIF DateTimeOriginal'].values, '%Y:%m:%d %H:%M:%S'))
         except KeyError:
             print(f"Key Error while reading metadata for {obj_paths[idx]}. Continuing...")
