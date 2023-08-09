@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import json
 import math
 import os
 import sys
@@ -140,6 +141,10 @@ def read_all_metadata(s3uri: str):
             processed.append(processed_metadata)
         except TypeError:
             print(f"Error processing metadata for {obj_paths[idx]}. Continuing...")
+            print(traceback.format_exc())
+        except KeyError:
+            print(f"Error processing metadata for {obj_paths[idx]}. Continuing...")
+            print(json.dumps(md))
             print(traceback.format_exc())
     return processed
 
