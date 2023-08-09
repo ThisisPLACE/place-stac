@@ -10,14 +10,10 @@ import traceback
 from urllib.parse import urlparse
 
 import boto3
-import pyexiv2
-from pyexiv2 import ImageData
+import exifread
 from stac_pydantic.collection import Collection, Extent, SpatialExtent, TimeInterval
 from stac_pydantic.item import Item
 from stac_pydantic.shared import Asset, Provider, ProviderRoles
-
-# Necessary to work with sony exif data
-pyexiv2.set_log_level(4)
 
 # Initialize a session with your AWS credentials
 session = boto3.Session()
@@ -64,20 +60,15 @@ def parse_s3uri(s3uri: str):
     return (bucket_name, prefix)
 
 
-def get_metadata(s3uri: str, maxbytes: int = 65535):
+def get_metadata(s3uri: str):
     """Get the metadata from a jpg image stored in S3."""
-    bucket_name, key = parse_s3uri(s3uri)
+    file_path = s3uri.replace("s3://place-data", "/home/storage/imagery")
     try:
-        response = s3.get_object(
-            Bucket=bucket_name,
-            Key=key,
-            Range=f"bytes=0-{maxbytes}"
-        )
-        partial_data = response['Body'].read()
-        exif_data = ImageData(partial_data).read_exif()
-        return exif_data
-    except Exception as e:
-        print(bucket_name, key)
+        with open(file_path, 'rb') as f:
+            tags = exifread.process_file(f)
+        return tags
+    except Exception:
+        print(f"Error encountered while retrieving metadata for {s3uri}")
         print(traceback.format_exc())
 
 
@@ -123,29 +114,27 @@ def s3uri_to_id(key: str):
         return f"{location}_{filename}"
 
 
-def read_all_metadata(s3uri: str, max_workers=10):
+def read_all_metadata(s3uri: str):
     """Read all metadata from jpg images in an S3 bucket."""
     bucket_name, prefix = parse_s3uri(s3uri)
     obj_keys = [key for key in list_s3_objects(s3uri) if key.lower().endswith(".jpg") or key.lower().endswith(".jpeg")]
     obj_paths = [f"s3://{bucket_name}/{key}" for key in obj_keys]
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        read_tasks = [executor.submit(get_metadata, f"s3://{bucket_name}/{key}") for key in obj_keys]
-        results = [task.result() for task in read_tasks]
+    all_metadata = [get_metadata(obj_path) for obj_path in obj_paths]
     processed = []
-    for idx, res in enumerate(results):
+    for idx, md in enumerate(all_metadata):
         try:
             processed_metadata = {
                 "path": obj_paths[idx],
-                "lat": dms_to_decimal(res['Exif.GPSInfo.GPSLatitude'], res['Exif.GPSInfo.GPSLatitudeRef']),
-                "lng": dms_to_decimal(res['Exif.GPSInfo.GPSLongitude'], res['Exif.GPSInfo.GPSLongitudeRef']),
-                "datetime": serialize_dt_rfc3339(datetime.strptime(res['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
-                "make": res['Exif.Image.Make'],
-                "model": res['Exif.Image.Model'],
-                "focal_length": res['Exif.Photo.FocalLengthIn35mmFilm'],
-                "exposure_time": res['Exif.Photo.ExposureTime']
+                "lat": dms_to_decimal(md['Exif.GPSInfo.GPSLatitude'], md['Exif.GPSInfo.GPSLatitudeRef']),
+                "lng": dms_to_decimal(md['Exif.GPSInfo.GPSLongitude'], md['Exif.GPSInfo.GPSLongitudeRef']),
+                "datetime": serialize_dt_rfc3339(datetime.strptime(md['Exif.Image.DateTime'], '%Y:%m:%d %H:%M:%S')),
+                "make": md['Exif.Image.Make'],
+                "model": md['Exif.Image.Model'],
+                "focal_length": md['Exif.Photo.FocalLengthIn35mmFilm'],
+                "exposure_time": md['Exif.Photo.ExposureTime']
             }
-            if "Exif.GPSInfo.GPSAltitude" in res:
-                raw_altitude = res['Exif.GPSInfo.GPSAltitude'].split('/')
+            if "Exif.GPSInfo.GPSAltitude" in md:
+                raw_altitude = md['Exif.GPSInfo.GPSAltitude'].split('/')
                 altitude = float(raw_altitude[0]) / float(raw_altitude[1])
                 processed_metadata["altitude"] = altitude
             processed.append(processed_metadata)
@@ -178,14 +167,15 @@ def build_stac_item(md, collection_id: str) -> Item:
             title='Raw JPG',
             description='Raw JPG image taken during drone flight.',
             roles=['data'],
-        ),
-        'raw_jpg': Asset(
-            href=md['path'].replace("s3://place-data/", "http://77.68.117.1/data/files/"),
-            type='image/jpeg',
-            title='Raw JPG',
-            description='Raw JPG image taken during drone flight.',
-            roles=['data'],
         )
+        # TODO: Add this back in when auth is available to serve these files
+        # 'raw_jpg': Asset(
+        #     href=md['path'].replace("s3://place-data/", "https://stac.thisisplace.org/data/files/"),
+        #     type='image/jpeg',
+        #     title='Raw JPG',
+        #     description='Raw JPG image taken during drone flight.',
+        #     roles=['data'],
+        # )
     }
 
     return Item(

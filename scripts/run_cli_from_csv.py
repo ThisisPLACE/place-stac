@@ -39,12 +39,14 @@ if __name__ == "__main__":
                         help='path to the csv defining CLI args', required=True)
     parser.add_argument('-s', '--script', metavar='SCRIPT', type=str,
                         help='path to the python script', required=True)
+    parser.add_argument('-p', '--parallelism', metavar='PARALLELISM', type=int,
+                        help='Desired parallelism', required=False, default=4)
     args = parser.parse_args()
 
     def execute_script(argument_set):
         return execute_cli_command(args.script, argument_set)
 
     argument_sets = parse_csv_to_dict(args.csv)
-    parallelism = min(os.cpu_count(), 4)
+    parallelism = min(os.cpu_count(), args.parallelism)
     with multiprocess.Pool(parallelism) as pool:
         pool.map(execute_script, argument_sets)
