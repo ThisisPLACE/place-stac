@@ -136,14 +136,13 @@ def read_all_metadata(s3uri: str):
                 "lat": img_lat,
                 "lng": img_lng,
                 "datetime": img_datetime,
-                "make": md['Exif.Image.Make'],
-                "model": md['Exif.Image.Model'],
-                "focal_length": md['Exif.Photo.FocalLengthIn35mmFilm'],
-                "exposure_time": md['Exif.Photo.ExposureTime']
+                "make": md['Image Make'].values,
+                "model": md['Image Model'].values,
+                "focal_length": md['Exif FocalLengthIn35mmFilm'],
+                "exposure_time": md['Exif ExposureTime']
             }
-            if "Exif.GPSInfo.GPSAltitude" in md:
-                raw_altitude = md['Exif.GPSInfo.GPSAltitude'].split('/')
-                altitude = float(raw_altitude[0]) / float(raw_altitude[1])
+            if "GPS GPSAltitude" in md:
+                altitude = md['GPS GPSAltitude'].values.decimal()
                 processed_metadata["altitude"] = altitude
             processed.append(processed_metadata)
         except TypeError:
