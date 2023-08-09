@@ -2,9 +2,9 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-import json
 import math
 import os
+import pprint
 import sys
 from typing import List
 import traceback
@@ -144,7 +144,7 @@ def read_all_metadata(s3uri: str):
             print(traceback.format_exc())
         except KeyError:
             print(f"Error processing metadata for {obj_paths[idx]}. Continuing...")
-            print(json.dumps(md))
+            print(pprint.pprint(md))
             print(traceback.format_exc())
     return processed
 
