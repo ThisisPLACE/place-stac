@@ -168,7 +168,7 @@ def build_stac_item(md, collection_id: str) -> Item:
     """Build a STAC Item from a metadata dictionary."""
     id = s3uri_to_id(md['path'])
     point = create_geojson_point(md['lat'], md['lng'])
-    bbox = get_bounding_box(md['lat'], md['lng'])
+    bbox = get_bounding_box(md['lng'], md['lat'])
     dt = md['datetime']
 
     assets = {
