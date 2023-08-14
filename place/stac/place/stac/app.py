@@ -30,6 +30,8 @@ extensions = [
 post_request_model = create_post_request_model(extensions, base_model=PgstacSearch)
 
 api = StacApi(
+    title="Place STAC API",
+    description="PLACE: Hyperlocal Mapping for Positive Change STAC Catalog and API",
     settings=settings,
     extensions=extensions,
     client=PlaceClient.create(post_request_model=post_request_model),

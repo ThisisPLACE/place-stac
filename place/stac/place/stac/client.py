@@ -85,9 +85,7 @@ class PlaceClient(CoreCrudClient):
         post_request_model: Type[BaseSearchPostRequest],
     ) -> "PlaceClient":
         it = cls(
-            landing_page_id="place",
-            title="PLACE STAC API",
-            description="Spatiotemporal Asset Catalog managed by PLACE",
+            landing_page_id="place-stac-api",
             post_request_model=post_request_model,
         )
         return it
