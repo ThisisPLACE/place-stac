@@ -120,4 +120,4 @@ services:
       - ./scripts:/app/scripts
       - ./data:/app/data
     command:
-      bash -c "./scripts/wait-for-it.sh localhost:5433 && python /app/scripts/ingest_place.py localhost:5433"
+      bash -c "./scripts/wait-for-it.sh localhost:5433 && python3 scripts/ingest_directory.py /stac"
