@@ -66,7 +66,8 @@ if __name__ == "__main__":
         item = create_stac_item(
             source=path,
             collection="mosaic_preview",
-            with_proj=True
+            with_proj=True,
+            asset_name="cog"
         )
         items.append(item)
 

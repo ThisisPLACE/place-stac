@@ -45,9 +45,11 @@ class UrlRewritePgSTACReader(PgSTACReader):
 
         """
         asset_url = super()._get_asset_url(asset)
+        print(asset_url)
+        print(asset_url.replace("s3://place-data/", "file:///home/storage/imagery/"))
         # Hardcoding these values to make it simple for future developers and because we
         #  are targeting only one deployment environment.
         return asset_url.replace(
-            "s3://place-data/",
-            "file:///home/storage/imagery/"
+            "/vsis3/place-data/",
+            "/home/storage/imagery/"
         )
