@@ -1,17 +1,21 @@
 """Custom STAC reader."""
 
-from typing import Dict, Optional, Set, Type
+from typing import Any, Dict, Optional, Set, Type
 
 import attr
 import pystac
+import rasterio
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.io import BaseReader, COGReader
-from rio_tiler.io.stac import DEFAULT_VALID_TYPE
+from rio_tiler.errors import InvalidAssetName, MissingAssets
+from rio_tiler.io import BaseReader, MultiBaseReader, Reader
+from rio_tiler.io.stac import DEFAULT_VALID_TYPE, _get_assets
+from rio_tiler.types import AssetInfo
 from titiler.pgstac.reader import PgSTACReader
 
 
+@attr.s
 class UrlRewritePgSTACReader(PgSTACReader):
 
     input: pystac.Item = attr.ib()
@@ -31,7 +35,9 @@ class UrlRewritePgSTACReader(PgSTACReader):
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
 
-    def _get_asset_url(self, asset: str) -> str:
+    ctx: Any = attr.ib(default=rasterio.Env)
+
+    def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset names and return rewritten asset url.
 
         This is useful if, for instance, a publicly accessible URI
@@ -44,12 +50,11 @@ class UrlRewritePgSTACReader(PgSTACReader):
             str: STAC asset href, rewritten.
 
         """
-        asset_url = super()._get_asset_url(asset)
-        print(asset_url)
-        print(asset_url.replace("s3://place-data/", "file:///home/storage/imagery/"))
+        asset_info = super()._get_asset_info(asset)
         # Hardcoding these values to make it simple for future developers and because we
         #  are targeting only one deployment environment.
-        return asset_url.replace(
+        asset_info["url"] = asset_info["url"].replace(
             "/vsis3/place-data/",
             "/home/storage/imagery/"
         )
+        return asset_info

@@ -27,6 +27,7 @@ from place.tiles.reader import UrlRewritePgSTACReader
 
 
 settings = Settings()
+print(f"APP SETTINGS DEBUG ON: {settings.debug}")
 if settings.debug:
     optional_headers = [OptionalHeader.server_timing, OptionalHeader.x_assets]
 else:
