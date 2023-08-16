@@ -16,12 +16,6 @@ session = boto3.Session()
 s3 = session.client('s3')
 paginator = s3.get_paginator('list_objects_v2')
 
-def serialize_dt_rfc3339(dt) -> str:
-    """Convert a datetime object to an RFC 3339-compliant string."""
-    rfc3339_string = dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-
-    return rfc3339_string
-
 def list_s3_objects(bucket_name: str, prefix: str):
     """List all objects in an S3 bucket with a given prefix."""
     keys = []
@@ -32,9 +26,7 @@ def list_s3_objects(bucket_name: str, prefix: str):
 def build_stac_collection(collection_id: str, description: str, title: str, items: List[Item]) -> Collection:
     # global extent
     collection_bbox = [-180, -90, 180, 90]
-    min_dt = min(item.properties.datetime for item in items)
-    max_dt = max(item.properties.datetime for item in items)
-    collection_interval = [serialize_dt_rfc3339(min_dt), serialize_dt_rfc3339(max_dt)]
+    collection_interval = ["2020-01-01T00:00:00.00Z", None]
     collection_extent = Extent(
         spatial=SpatialExtent(bbox=[collection_bbox]),
         temporal=TimeInterval(interval=[collection_interval])
@@ -59,8 +51,8 @@ def build_stac_collection(collection_id: str, description: str, title: str, item
     return collection
 
 if __name__ == "__main__":
-    collection_file = "/home/storage/imagery/aerial/cog/collection.json"
-    item_file = "/home/storage/imagery/aerial/cog/items.json"
+    collection_file = "/home/storage/stac/aerial/cog/collection.json"
+    item_file = "/home/storage/stac/aerial/cog/items.json"
     bucket_name = "place-data"
     prefix = "aerial/cog/"
 

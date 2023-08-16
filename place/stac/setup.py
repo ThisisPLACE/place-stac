@@ -11,6 +11,8 @@ install_requires = [
     "uvicorn[standard]",
     "pypgstac[psycopg]==0.7.6",
     "pygeoif==0.7",
+    "boto3==1.28.28",
+    "rio-stac==0.8.0"
 ]
 
 extra_reqs = {
