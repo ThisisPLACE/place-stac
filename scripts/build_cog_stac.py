@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import pprint
 import traceback
 from typing import List
@@ -86,7 +87,9 @@ if __name__ == "__main__":
     with open(item_file, 'w') as f:
         for item in items:
             try:
-                f.write(item.to_json() + '\n')
+                item_dict = item.to_dict()
+                item_json = json.dumps(item_dict)
+                f.write(item_json + '\n')
             except Exception:
                 print(f"Error writing item to file: {item.id}")
                 pprint.pprint(item)
