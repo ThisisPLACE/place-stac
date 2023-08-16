@@ -11,8 +11,6 @@ from rio_tiler.io import BaseReader, COGReader
 from rio_tiler.io.stac import DEFAULT_VALID_TYPE
 from titiler.pgstac.reader import PgSTACReader
 
-from place.common.render import get_render_config
-
 
 class UrlRewritePgSTACReader(PgSTACReader):
 
@@ -47,8 +45,9 @@ class UrlRewritePgSTACReader(PgSTACReader):
 
         """
         asset_url = super()._get_asset_url(asset)
-        render_config = get_render_config(self.input.collection)
+        # Hardcoding these values to make it simple for future developers and because we
+        #  are targeting only one deployment environment.
         return asset_url.replace(
-            render_config.public_url_root,
-            render_config.private_url_root
+            "s3://place-data/",
+            "file:///home/storage/imagery/"
         )

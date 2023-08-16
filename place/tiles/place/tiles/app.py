@@ -23,6 +23,7 @@ from titiler.core.middleware import (
 from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 
 from place.tiles.settings import Settings
+from place.tiles.reader import UrlRewritePgSTACReader
 
 
 settings = Settings()
@@ -41,7 +42,7 @@ app = FastAPI(
 ###############################################################################
 # STAC Item Endpoints
 stac = MultiBaseTilerFactory(
-    reader=PgSTACReader,
+    reader=UrlRewritePgSTACReader,
     path_dependency=ItemPathParams,
     optional_headers=optional_headers,
     router_prefix="/collections/{collection_id}/items/{item_id}",
