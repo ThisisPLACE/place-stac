@@ -1,8 +1,6 @@
 import os
 import sys
-from pathlib import Path
 
-import orjson
 from pypgstac.load import Loader, Methods, PgstacDB
 
 
