@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pprint
 import traceback
-from urllib.parse import urlparse
+from typing import List
 
 import boto3
 from rio_stac import create_stac_item
