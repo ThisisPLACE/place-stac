@@ -20,9 +20,9 @@ class UrlRewritePgSTACReader(PgSTACReader):
 
     input: pystac.Item = attr.ib()
 
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib()
     maxzoom: int = attr.ib()
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
