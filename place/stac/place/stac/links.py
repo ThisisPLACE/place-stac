@@ -83,8 +83,6 @@ class LinkInjector:
     def _get_item_preview_asset(self, item_id: str) -> Dict[str, Any]:
         qs = self.render_config.get_full_render_qs()
         href = urljoin(self.tiler_href, f"collections/{self.collection_id}/items/{item_id}/preview.png?{qs}")
-        print(f"tiler_href: {self.tiler_href}")
-        print(f"href: {href}")
 
         return {
             "title": "Rendered preview",
