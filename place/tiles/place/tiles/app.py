@@ -62,8 +62,8 @@ app.include_router(tms.router, tags=["Tiling Schemes"])
 algorithms = AlgorithmFactory()
 app.include_router(algorithms.router, tags=["Algorithms"])
 
-add_exception_handlers(app, DEFAULT_STATUS_CODES)
-add_exception_handlers(app, MOSAIC_STATUS_CODES)
+#add_exception_handlers(app, DEFAULT_STATUS_CODES)
+#add_exception_handlers(app, MOSAIC_STATUS_CODES)
 
 
 # Set all CORS enabled origins
@@ -133,7 +133,7 @@ def run():
             "place.tiles.app:app",
             host=settings.host,
             port=settings.port,
-            log_level="info",
+            log_level="debug",
             reload=settings.reload,
         )
     except ImportError:

@@ -20,9 +20,9 @@ class UrlRewritePgSTACReader(PgSTACReader):
 
     input: pystac.Item = attr.ib()
 
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib()
     maxzoom: int = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
@@ -36,6 +36,14 @@ class UrlRewritePgSTACReader(PgSTACReader):
     reader_options: Dict = attr.ib(factory=dict)
 
     ctx: Any = attr.ib(default=rasterio.Env)
+
+    @minzoom.default
+    def _minzoom(self):
+        return self.tms.minzoom
+
+    @maxzoom.default
+    def _maxzoom(self):
+        return self.tms.maxzoom
 
     def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset names and return rewritten asset url.
@@ -53,8 +61,10 @@ class UrlRewritePgSTACReader(PgSTACReader):
         asset_info = super()._get_asset_info(asset)
         # Hardcoding these values to make it simple for future developers and because we
         #  are targeting only one deployment environment.
+        print(f"NON updated asset info: {asset_info}")
         asset_info["url"] = asset_info["url"].replace(
             "/vsis3/place-data/",
             "/home/storage/imagery/"
         )
+        print(f"updated asset info: {asset_info}")
         return asset_info

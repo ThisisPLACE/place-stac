@@ -11,6 +11,7 @@ class Settings(ApiSettings):
     port: int = Field(env="TILER_PORT", default=8082)
     reload: bool = Field(env="TILER_RELOAD", default=True)
     root_path: str = Field(env="TILER_ROOT_PATH", default="/data/")
+    debug = True
 
     def get_stac_api_href(self, request: Request) -> str:
         """Generates the STAC API HREF.
