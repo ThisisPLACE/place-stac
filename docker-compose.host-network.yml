@@ -86,6 +86,7 @@ services:
       - database
     volumes:
       - ./place:/app/place
+      - /home/storage/imagery:/home/storage/imagery
     command:
       bash -c "./scripts/wait-for-it.sh localhost:5433 && python -m place.tiles.app"
   database:

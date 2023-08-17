@@ -61,10 +61,8 @@ class UrlRewritePgSTACReader(PgSTACReader):
         asset_info = super()._get_asset_info(asset)
         # Hardcoding these values to make it simple for future developers and because we
         #  are targeting only one deployment environment.
-        print(f"NON updated asset info: {asset_info}")
         asset_info["url"] = asset_info["url"].replace(
             "s3://place-data/",
             "/home/storage/imagery/"
         )
-        print(f"updated asset info: {asset_info}")
         return asset_info

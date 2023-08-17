@@ -27,7 +27,6 @@ from place.tiles.reader import UrlRewritePgSTACReader
 
 
 settings = Settings()
-print(f"APP SETTINGS DEBUG ON: {settings.debug}")
 if settings.debug:
     optional_headers = [OptionalHeader.server_timing, OptionalHeader.x_assets]
 else:
@@ -62,8 +61,8 @@ app.include_router(tms.router, tags=["Tiling Schemes"])
 algorithms = AlgorithmFactory()
 app.include_router(algorithms.router, tags=["Algorithms"])
 
-#add_exception_handlers(app, DEFAULT_STATUS_CODES)
-#add_exception_handlers(app, MOSAIC_STATUS_CODES)
+add_exception_handlers(app, DEFAULT_STATUS_CODES)
+add_exception_handlers(app, MOSAIC_STATUS_CODES)
 
 
 # Set all CORS enabled origins
@@ -133,7 +132,7 @@ def run():
             "place.tiles.app:app",
             host=settings.host,
             port=settings.port,
-            log_level="debug",
+            log_level="info",
             reload=settings.reload,
         )
     except ImportError:
