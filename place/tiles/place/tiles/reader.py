@@ -63,7 +63,7 @@ class UrlRewritePgSTACReader(PgSTACReader):
         #  are targeting only one deployment environment.
         print(f"NON updated asset info: {asset_info}")
         asset_info["url"] = asset_info["url"].replace(
-            "/vsis3/place-data/",
+            "s3://place-data/",
             "/home/storage/imagery/"
         )
         print(f"updated asset info: {asset_info}")
