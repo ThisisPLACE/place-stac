@@ -21,8 +21,8 @@ class UrlRewritePgSTACReader(PgSTACReader):
     input: pystac.Item = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int = attr.ib()
+    maxzoom: int = attr.ib()
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
@@ -32,7 +32,7 @@ class UrlRewritePgSTACReader(PgSTACReader):
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader: Type[BaseReader] = attr.ib(default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
 
     ctx: Any = attr.ib(default=rasterio.Env)
