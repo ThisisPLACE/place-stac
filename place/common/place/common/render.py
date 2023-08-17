@@ -69,7 +69,7 @@ class RenderConfig(BaseModel):
         json_dumps = orjson_dumps
 
 
-DEFAULT_CONFIG = RenderConfig(render_params= {"asset_bidx": "cog|1"})
+DEFAULT_CONFIG = RenderConfig(render_params= {"asset_bidx": "cog|1,2,3"})
 IVORY_COAST_CONFIG = RenderConfig(render_params={"asset_bidx": "cog|1,2,3"})
 
 RENDER_CONFIGS: List[RenderConfig] = {
