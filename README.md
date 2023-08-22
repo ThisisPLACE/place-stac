@@ -108,13 +108,6 @@ docker compose -f docker-compose.host-network.yml run -v /home/storage/stac/aeri
 docker compose -f docker-compose.host-network.yml run -v /home/storage/stac/aerial/jpg:/home/storage/stac/aerial/jpg place-scripts /bin/bash -c "python3 scripts/ingest_directory.py /home/storage/stac/aerial/jpg"
 ```
 
-Usage:
-
-```bash
-# Replace `script.py` with the script name and `[args]` with the necessary arguments.
-python scripts/script.py [args]
-```
-
 ## Reporting Issues
 
 Issues can be reported via the GitHub issue tracker.
